@@ -124,7 +124,17 @@ Shader "Living Diorama/Water"
                 // How much water sits between this pixel and whatever is behind it.
                 float sceneDepth = LinearEyeDepth(SampleSceneDepth(screenUV), _ZBufferParams);
                 float surfaceDepth = IN.screenPos.w;
-                float waterDepth = max(0.0, sceneDepth - surfaceDepth);
+                float waterDepth = sceneDepth - surfaceDepth;
+
+                // The depth texture is not always there: an offscreen render, a renderer
+                // configured without a depth pass, or a device that quietly dropped it.
+                // Without a guard the sample reads as zero depth, every pixel counts as
+                // shoreline, and the whole river turns into a sheet of white foam. Falling
+                // back to a plausible mid-depth keeps it looking like water instead.
+                if (!(waterDepth > 0.0) || waterDepth > 1000.0)
+                {
+                    waterDepth = _DepthFade;
+                }
 
                 half depth01 = saturate(waterDepth / max(0.001h, _DepthFade));
                 half4 colour = lerp(_ShallowColor, _DeepColor, depth01);

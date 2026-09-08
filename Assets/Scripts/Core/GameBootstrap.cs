@@ -191,12 +191,12 @@ namespace LivingDiorama.Core
 
             var bloom = profile.Add<Bloom>(true);
             bloom.intensity.Override(0.55f);
-            bloom.threshold.Override(1.05f);
+            bloom.threshold.Override(1.15f);
             bloom.scatter.Override(0.62f);
             bloom.tint.Override(new Color(1f, 0.96f, 0.88f));
 
             var grade = profile.Add<ColorAdjustments>(true);
-            grade.postExposure.Override(0.15f);
+            grade.postExposure.Override(-0.05f);
             grade.contrast.Override(11f);
             grade.saturation.Override(14f);
 

@@ -194,7 +194,7 @@ Shader "Living Diorama/Creature"
 
                 // ---- ambient ---------------------------------------------------------
                 half3 ambient = SampleSH(normalWS) * albedo.rgb;
-                colour += ambient * 0.55h;
+                colour += ambient * 0.38h;
 
                 // ---- subsurface ------------------------------------------------------
                 // Light bleeding through thin parts: strongest where the surface faces away

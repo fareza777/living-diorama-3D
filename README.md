@@ -8,15 +8,21 @@ The knight notices the theft. The slime, oblivious, plays in the river. The skel
 sleeps through all of it and gets up at dusk. Everything you see happening was decided by
 the creatures, not scripted for you.
 
-Android, 3D, fully offline. No account, no backend, no network calls at runtime.
+Android, 3D, fully offline. No account, no backend, no network calls at runtime -- a
+build post-processor strips the INTERNET permission from the manifest, so the install
+screen agrees.
 
 <p align="center">
-  <img src="Assets/Art/Creatures/slime/slime_thumb.png" width="130">
-  <img src="Assets/Art/Creatures/goblin/goblin_thumb.png" width="130">
-  <img src="Assets/Art/Creatures/wolf/wolf_thumb.png" width="130">
-  <img src="Assets/Art/Creatures/knight/knight_thumb.png" width="130">
-  <img src="Assets/Art/Creatures/skeleton/skeleton_thumb.png" width="130">
-  <img src="Assets/Art/Creatures/dragon/dragon_thumb.png" width="130">
+  <img src="docs/diorama.png" width="330" alt="A forest tile with a goblin, two slimes, a river and scattered trees">
+</p>
+
+<p align="center">
+  <img src="Assets/Art/Creatures/slime/slime_thumb.png" width="110">
+  <img src="Assets/Art/Creatures/goblin/goblin_thumb.png" width="110">
+  <img src="Assets/Art/Creatures/wolf/wolf_thumb.png" width="110">
+  <img src="Assets/Art/Creatures/knight/knight_thumb.png" width="110">
+  <img src="Assets/Art/Creatures/skeleton/skeleton_thumb.png" width="110">
+  <img src="Assets/Art/Creatures/dragon/dragon_thumb.png" width="110">
 </p>
 
 ---
@@ -122,6 +128,23 @@ Unity.exe -runTests -batchmode -projectPath . -testPlatform EditMode \
 
 Covers the box odds and pity guarantees, the trait-based relation rules, the progression
 curves, offline earnings, terrain determinism and tile seaming, and save round-tripping.
+
+### Smoke test
+
+Tests prove the maths; they say nothing about whether anything appears on screen. This
+runs the real game headlessly, waits for the models to stream in, skips the title, and
+photographs it:
+
+```bash
+Unity.exe -batchmode -projectPath . -cameraOnly \
+  -executeMethod LivingDiorama.EditorTools.PlaymodeCapture.Run
+```
+
+Shots land in `Screenshots/`, each logged with a line reporting how many creatures exist,
+how many models actually loaded, the world clock and what every creature is currently
+doing -- so a blank frame can be told apart from an empty world. Pass `-uiOnly` to
+photograph the interface layer instead. Batch mode composites the two layers unreliably,
+so capture one at a time.
 
 ## Asset pipelines
 

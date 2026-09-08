@@ -146,7 +146,7 @@ Shader "Living Diorama/Ground"
                 half3 lit = albedo * mainLight.color * lighting;
                 half3 shade = albedo * _ShadowTint.rgb;
                 half3 colour = lerp(shade, lit, lighting);
-                colour += SampleSH(normalWS) * albedo * 0.5h;
+                colour += SampleSH(normalWS) * albedo * 0.35h;
 
                 #ifdef _ADDITIONAL_LIGHTS
                 uint count = GetAdditionalLightsCount();

@@ -211,27 +211,34 @@ namespace LivingDiorama.EditorTools
                 importer.filterMode = FilterMode.Bilinear;
                 importer.maxTextureSize = isPlate ? 512 : 256;
                 importer.textureCompression = TextureImporterCompression.CompressedHQ;
+                importer.SaveAndReimport();
 
-                if (isPlate)
-                {
-                    Vector4 fraction = plateBorders[key];
-                    var settings = new TextureImporterSettings();
-                    importer.ReadTextureSettings(settings);
+                // Nine-slice borders are expressed in pixels of the *imported* sprite, so
+                // they can only be computed once the size cap has actually been applied.
+                // Reading the texture before the reimport measures the previous import and
+                // produces borders that are wrong by whatever the cap changed.
+                if (!isPlate) continue;
 
-                    // Borders are in pixels, so they have to be derived from the actual
-                    // imported size rather than assumed.
-                    var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-                    if (texture != null)
-                    {
-                        settings.spriteBorder = new Vector4(
-                            texture.width * fraction.x,
-                            texture.height * fraction.y,
-                            texture.width * fraction.z,
-                            texture.height * fraction.w);
-                        importer.SetTextureSettings(settings);
-                    }
-                }
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) continue;
 
+                Vector4 fraction = plateBorders[key];
+                float width = sprite.rect.width;
+                float height = sprite.rect.height;
+
+                var border = new Vector4(
+                    Mathf.Floor(width * fraction.x),
+                    Mathf.Floor(height * fraction.y),
+                    Mathf.Floor(width * fraction.z),
+                    Mathf.Floor(height * fraction.w));
+
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+
+                if (settings.spriteBorder == border) continue;
+
+                settings.spriteBorder = border;
+                importer.SetTextureSettings(settings);
                 importer.SaveAndReimport();
             }
         }

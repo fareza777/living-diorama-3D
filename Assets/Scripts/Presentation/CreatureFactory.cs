@@ -234,19 +234,61 @@ namespace LivingDiorama.Presentation
             }
         }
 
+        /// <summary>
+        /// Find the albedo on an imported material.
+        ///
+        /// Which property holds it depends on the shader glTFast happened to pick, and
+        /// that varies with the render pipeline and the glTF's own material setup. Getting
+        /// this wrong is not loud -- the creature simply renders white, which reads as a
+        /// deliberate art choice rather than as a missing texture -- so the lookup tries
+        /// the known names and then falls back to whatever texture the material has.
+        /// </summary>
         static Texture FindBaseTexture(Material m)
         {
-            if (m.HasProperty(BaseMapId)) return m.GetTexture(BaseMapId);
-            if (m.HasProperty("_MainTex")) return m.GetTexture("_MainTex");
+            foreach (string name in BaseMapNames)
+            {
+                if (!m.HasProperty(name)) continue;
+
+                Texture texture = m.GetTexture(name);
+                if (texture != null) return texture;
+            }
+
+            // Last resort: the first bound texture that is not obviously a normal map.
+            string[] properties = m.GetTexturePropertyNames();
+            foreach (string name in properties)
+            {
+                if (name.IndexOf("normal", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                if (name.IndexOf("bump", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+
+                Texture texture = m.GetTexture(name);
+                if (texture != null) return texture;
+            }
+
             return null;
         }
 
+        static readonly string[] BaseMapNames =
+        {
+            "_BaseMap",              // URP Lit
+            "baseColorTexture",      // glTFast's own shaders
+            "_baseColorTexture",
+            "_MainTex",              // built-in
+            "_BaseColorMap",         // HDRP, in case the project ever moves
+        };
+
         static Color FindBaseColour(Material m)
         {
-            if (m.HasProperty(BaseColorId)) return m.GetColor(BaseColorId);
-            if (m.HasProperty("_Color")) return m.GetColor("_Color");
+            foreach (string name in BaseColourNames)
+            {
+                if (m.HasProperty(name)) return m.GetColor(name);
+            }
             return Color.white;
         }
+
+        static readonly string[] BaseColourNames =
+        {
+            "_BaseColor", "baseColorFactor", "_baseColorFactor", "_Color",
+        };
 
         public void Dispose()
         {

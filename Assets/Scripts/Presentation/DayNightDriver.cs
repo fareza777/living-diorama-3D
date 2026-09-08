@@ -17,7 +17,7 @@ namespace LivingDiorama.Presentation
     {
         [Header("Sun colour")]
         [SerializeField] Gradient _sunColour;
-        [SerializeField] AnimationCurve _sunIntensity = AnimationCurve.Linear(0f, 0.15f, 1f, 1.35f);
+        [SerializeField] AnimationCurve _sunIntensity = AnimationCurve.Linear(0f, 0.12f, 1f, 1.0f);
 
         [Header("Ambient")]
         [SerializeField] Gradient _ambientSky;

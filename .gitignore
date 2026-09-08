@@ -62,3 +62,6 @@ desktop.ini
 __pycache__/
 *.pyc
 .venv/
+
+# Smoke-test output; the one shot the README uses is committed under docs/.
+Screenshots/

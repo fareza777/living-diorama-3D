@@ -86,6 +86,7 @@ Shader "Living Diorama/Foliage"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS   : NORMAL;
+                float4 color      : COLOR;
                 float2 uv         : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -98,6 +99,7 @@ Shader "Living Diorama/Foliage"
                 float2 uv         : TEXCOORD2;
                 float  heightOS   : TEXCOORD3;
                 float  fogFactor  : TEXCOORD4;
+                float4 color      : TEXCOORD5;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -116,6 +118,7 @@ Shader "Living Diorama/Foliage"
                 OUT.normalWS = TransformObjectToWorldNormal(IN.normalOS);
                 OUT.uv = TRANSFORM_TEX(IN.uv, _BaseMap);
                 OUT.heightOS = IN.positionOS.y;
+                OUT.color = IN.color;
                 OUT.fogFactor = ComputeFogFactor(OUT.positionCS.z);
                 return OUT;
             }
@@ -127,11 +130,12 @@ Shader "Living Diorama/Foliage"
                 half4 sampled = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv);
                 clip(sampled.a - _Cutoff);
 
-                half3 albedo = sampled.rgb * _BaseColor.rgb;
+                // Vertex colour carries the biome palette; the texture and tint modulate it.
+                half3 albedo = sampled.rgb * _BaseColor.rgb * IN.color.rgb;
 
                 // Lighter towards the tips, the way real foliage catches more light higher up.
                 half tip = saturate(IN.heightOS / max(0.001h, _TipHeight));
-                albedo = lerp(albedo, _TipColor.rgb * sampled.rgb, tip * 0.65h);
+                albedo = lerp(albedo, albedo * _TipColor.rgb * 1.35h, tip * 0.5h);
 
                 // Two-sided geometry: flip the normal for back faces so both sides light.
                 float3 normalWS = normalize(IN.normalWS) * sign(facing);
@@ -146,7 +150,7 @@ Shader "Living Diorama/Foliage"
                 half3 lit = albedo * mainLight.color * lighting;
                 half3 shade = albedo * _ShadowTint.rgb;
                 half3 colour = lerp(shade, lit, lighting);
-                colour += SampleSH(normalWS) * albedo * 0.5h;
+                colour += SampleSH(normalWS) * albedo * 0.35h;
 
                 // Backlight bleeding through the leaf.
                 half through = pow(saturate(dot(viewWS, -mainLight.direction)), 3.0h);
