@@ -365,7 +365,22 @@ namespace LivingDiorama.Presentation
 
         void OnDestroy()
         {
-            if (_model != null) Destroy(_model);
+            if (_model == null) return;
+
+            // The factory re-skins every renderer onto a fresh material instance, and
+            // destroying a GameObject does not take its materials with it. Recalling
+            // creatures to the collection is a routine action, so left alone this would
+            // leak a material per creature per session.
+            var renderers = _model.GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer r in renderers)
+            {
+                foreach (Material material in r.sharedMaterials)
+                {
+                    if (material != null) Destroy(material);
+                }
+            }
+
+            Destroy(_model);
         }
     }
 }

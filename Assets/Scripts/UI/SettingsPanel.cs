@@ -27,6 +27,7 @@ namespace LivingDiorama.UI
         Action _onClose;
         Action _onEraseSave;
         double _resetArmedAt = double.NegativeInfinity;
+        double _lastSfxPreview = double.NegativeInfinity;
 
         public VisualElement Root => _root;
 
@@ -56,7 +57,13 @@ namespace LivingDiorama.UI
             sfx.RegisterValueChangedCallback(e =>
             {
                 audio.SetSfxVolume(e.newValue);
-                // Preview on release so the slider is self-explanatory.
+
+                // Preview the new level, but not on every pixel of a drag -- firing a
+                // click per frame is exactly the noise the slider is meant to control.
+                double now = Time.realtimeSinceStartupAsDouble;
+                if (now - _lastSfxPreview < 0.18) return;
+
+                _lastSfxPreview = now;
                 audio.PlaySfx("ui_tap");
             });
             voice.RegisterValueChangedCallback(e => audio.SetVoiceVolume(e.newValue));

@@ -184,7 +184,9 @@ namespace LivingDiorama.UI
             yield return null;
             _card.AddToClassList("coach__card--in");
 
-            _audio?.Narrate(step.VoiceKey, SettingsPanel.SubtitlesEnabled ? null : _body.text);
+            // No subtitle band during the tour: the coach card already has the line on
+            // screen, and two copies of the same sentence is worse than none.
+            _audio?.Narrate(step.VoiceKey);
 
             Highlight(step.HighlightElement);
 

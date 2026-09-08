@@ -117,13 +117,13 @@ namespace LivingDiorama.Diorama
         static void Wall(ProceduralMeshes.Builder b, Vector3 topA, Vector3 topB,
                          Vector3 bottomB, Vector3 bottomA, Color topColour, Color bottomColour)
         {
-            // Split the quad in two so the vertical colour step survives flat shading.
+            // Split the quad in two so the vertical colour step survives flat shading:
+            // the upper half takes the top colour, the lower half the bottom one.
             Vector3 midA = Vector3.Lerp(topA, bottomA, 0.5f);
             Vector3 midB = Vector3.Lerp(topB, bottomB, 0.5f);
-            Color mid = Color.Lerp(topColour, bottomColour, 0.5f);
 
             b.AddQuad(topA, topB, midB, midA, topColour);
-            b.AddQuad(midA, midB, bottomB, bottomA, mid);
+            b.AddQuad(midA, midB, bottomB, bottomA, bottomColour);
         }
 
         static void Cap(ProceduralMeshes.Builder b, Vector3 min, Vector3 max, float y,

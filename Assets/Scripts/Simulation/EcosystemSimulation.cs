@@ -195,6 +195,9 @@ namespace LivingDiorama.Simulation
 
         void TickBucket(int bucket, float tickDelta)
         {
+            // Buckets stagger *which* agents think on a given step, not how often any one
+            // of them does: every agent still gets exactly one tick per brain interval, so
+            // needs advance by that interval and nothing else.
             float inGameHours = tickDelta * Clock.HoursPerRealSecond;
 
             for (int i = 0; i < _agents.Count; i++)
@@ -203,7 +206,7 @@ namespace LivingDiorama.Simulation
                 if (agent == null || !agent.IsActive || agent.BrainBucket != bucket) continue;
 
                 float activity = Settings.ActivityFor(agent.Definition.activity, Clock.NormalisedTime);
-                agent.TickNeeds(inGameHours * Mathf.Max(1, Settings.brainBuckets), activity);
+                agent.TickNeeds(inGameHours, activity);
 
                 if (agent.IsKnockedOut) continue;
 

@@ -48,6 +48,8 @@ crashlytics-build.properties
 
 # Gradle / Android export
 [Ee]xport/
+.utmp/
+.gradle/
 *.keystore
 !debug.keystore
 

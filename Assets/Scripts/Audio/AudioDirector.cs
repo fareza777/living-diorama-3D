@@ -20,6 +20,9 @@ namespace LivingDiorama.Audio
         const string SfxVolumeKey = "audio.sfx";
         const string VoiceVolumeKey = "audio.voice";
 
+        /// <summary>Ambience rides below the music bed rather than alongside it.</summary>
+        const float AmbienceLevel = 0.8f;
+
         const float DuckLevel = 0.28f;
         const float DuckTime = 0.25f;
         const float ReleaseTime = 0.7f;
@@ -186,7 +189,9 @@ namespace LivingDiorama.Audio
             float startMusic = _music.volume;
             float startAmbience = ActiveAmbience.volume;
             float musicTarget = MusicVolume * target;
-            float ambienceTarget = MusicVolume * target;
+            // Ambience sits under the music at 0.8; releasing the duck has to return it to
+            // that level, not to full, or every narration would leave the bed a little louder.
+            float ambienceTarget = MusicVolume * AmbienceLevel * target;
 
             float t = 0f;
             while (t < duration)
@@ -242,7 +247,7 @@ namespace LivingDiorama.Audio
         IEnumerator Crossfade(AudioSource outgoing, AudioSource incoming, float duration)
         {
             float startOut = outgoing.volume;
-            float targetIn = MusicVolume * 0.8f;
+            float targetIn = MusicVolume * AmbienceLevel;
             float t = 0f;
 
             while (t < duration)
@@ -278,7 +283,7 @@ namespace LivingDiorama.Audio
             MusicVolume = Mathf.Clamp01(value);
             PlayerPrefs.SetFloat(MusicVolumeKey, MusicVolume);
             _music.volume = MusicVolume;
-            ActiveAmbience.volume = MusicVolume * 0.8f;
+            ActiveAmbience.volume = MusicVolume * AmbienceLevel;
         }
 
         public void SetSfxVolume(float value)
