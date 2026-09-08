@@ -1,0 +1,28 @@
+# Normalise line endings so the repository is identical on Windows, macOS and CI.
+* text=auto eol=lf
+
+# Unity's own text assets are YAML and must stay diffable.
+*.unity      text eol=lf
+*.asset      text eol=lf
+*.prefab     text eol=lf
+*.meta       text eol=lf
+*.asmdef     text eol=lf
+*.uxml       text eol=lf
+*.uss        text eol=lf
+*.tss        text eol=lf
+*.shader     text eol=lf
+*.hlsl       text eol=lf
+*.cs         text eol=lf diff=csharp
+
+# Binaries: never touch, never diff.
+*.png        binary
+*.jpg        binary
+*.glb        binary
+*.fbx        binary
+*.mp3        binary
+*.wav        binary
+*.ogg        binary
+*.apk        binary
+*.aab        binary
+*.ttf        binary
+*.otf        binary
