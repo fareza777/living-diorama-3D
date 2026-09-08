@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0508303b86c524e80a43e918786c25, type: 3}
+  m_Name: Creature_wolf
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.CreatureDefinition
+  id: wolf
+  displayName: Timber Wolf
+  flavourText: Patient, focused, and always aware of exactly where the goblin is.
+  rarity: 1
+  icon: {fileID: 21300000, guid: a12cb1adf05d4d14ebb55e320ea61e3d, type: 3}
+  modelPrefab: {fileID: 0}
+  streamingModelFile: wolf.glb
+  autoFitToBodyHeight: 1
+  modelScale: 1
+  groundOffset: 0
+  modelEuler: {x: 0, y: 0, z: 0}
+  bodySize: 2
+  bodyRadius: 0.34
+  bodyHeight: 0.78
+  locomotion: 3
+  walkSpeed: 0.95
+  runSpeed: 2.9
+  turnSpeedDeg: 420
+  gaitBob: 0.07
+  gaitFrequency: 2.4
+  diet: 2
+  activity: 2
+  tags:
+  - beast
+  - predator
+  - pack
+  - living
+  preferredBiomes:
+  - forest
+  - snow
+  aggression: 0.72
+  bravery: 0.8
+  sociability: 0.65
+  curiosity: 0.55
+  mischief: 0.1
+  lovesWater: 0.3
+  hungerRate: 0.09
+  energyRate: 0.07
+  socialRate: 0.05
+  maxHealth: 34
+  attackDamage: 7
+  attackInterval: 1.4
+  attackRange: 0.95
+  coinsPerHour: 12
+  discoveryEssence: 45
+  voiceClipKey: 
+  footstepClipKey: 

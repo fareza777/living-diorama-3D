@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0508303b86c524e80a43e918786c25, type: 3}
+  m_Name: Creature_goblin
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.CreatureDefinition
+  id: goblin
+  displayName: Goblin
+  flavourText: Small, quick, and utterly without shame. Leave food out at your peril.
+  rarity: 0
+  icon: {fileID: 21300000, guid: e926b2a6245b8b84cbdcb0c79d4e6da8, type: 3}
+  modelPrefab: {fileID: 0}
+  streamingModelFile: goblin.glb
+  autoFitToBodyHeight: 1
+  modelScale: 1
+  groundOffset: 0
+  modelEuler: {x: 0, y: 0, z: 0}
+  bodySize: 1
+  bodyRadius: 0.26
+  bodyHeight: 0.72
+  locomotion: 1
+  walkSpeed: 0.85
+  runSpeed: 2.3
+  turnSpeedDeg: 420
+  gaitBob: 0.11
+  gaitFrequency: 2.9
+  diet: 3
+  activity: 0
+  tags:
+  - humanoid
+  - mischief
+  - small
+  - living
+  preferredBiomes:
+  - forest
+  - cave
+  aggression: 0.3
+  bravery: 0.35
+  sociability: 0.55
+  curiosity: 0.85
+  mischief: 0.9
+  lovesWater: 0.15
+  hungerRate: 0.09
+  energyRate: 0.07
+  socialRate: 0.05
+  maxHealth: 16
+  attackDamage: 3
+  attackInterval: 1.4
+  attackRange: 0.75
+  coinsPerHour: 7
+  discoveryEssence: 20
+  voiceClipKey: 
+  footstepClipKey: 

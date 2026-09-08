@@ -1,0 +1,756 @@
+/* Living Diorama -- interface stylesheet.
+ *
+ * The world is warm, saturated and busy, so the UI stays dark, quiet and translucent:
+ * it frames the diorama rather than competing with it. Everything is built from a small
+ * set of tokens below so a colour change is one edit, not forty.
+ */
+
+:root {
+    --ink: rgb(240, 243, 250);
+    --ink-dim: rgba(240, 243, 250, 0.62);
+    --ink-faint: rgba(240, 243, 250, 0.34);
+
+    --panel: rgba(18, 20, 32, 0.88);
+    --panel-raised: rgba(30, 34, 52, 0.94);
+    --panel-sunken: rgba(10, 11, 20, 0.75);
+    --stroke: rgba(255, 255, 255, 0.10);
+    --stroke-strong: rgba(255, 255, 255, 0.22);
+
+    --gold: rgb(255, 199, 88);
+    --teal: rgb(104, 226, 214);
+    --violet: rgb(178, 142, 255);
+    --danger: rgb(255, 118, 106);
+    --success: rgb(126, 226, 140);
+
+    --rarity-common: rgb(158, 166, 184);
+    --rarity-uncommon: rgb(126, 214, 138);
+    --rarity-rare: rgb(104, 176, 255);
+    --rarity-epic: rgb(190, 132, 255);
+    --rarity-legendary: rgb(255, 196, 84);
+
+    --radius: 18px;
+    --radius-sm: 12px;
+    --gap: 10px;
+}
+
+/* ---------------------------------------------------------------- structure */
+
+.root {
+    flex-grow: 1;
+    /* Leaves room for notches and gesture bars without a plugin. */
+    padding-top: 14px;
+    padding-bottom: 14px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.column {
+    flex-direction: column;
+}
+
+.spacer {
+    flex-grow: 1;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ------------------------------------------------------------------- panels */
+
+.panel {
+    background-color: var(--panel);
+    border-radius: var(--radius);
+    border-width: 1px;
+    border-color: var(--stroke);
+    padding: 14px;
+}
+
+.panel--raised {
+    background-color: var(--panel-raised);
+    border-color: var(--stroke-strong);
+}
+
+.scrim {
+    background-color: rgba(6, 7, 14, 0.72);
+}
+
+.modal {
+    align-items: center;
+    justify-content: center;
+}
+
+.modal__card {
+    width: 92%;
+    max-width: 520px;
+    max-height: 84%;
+    background-color: var(--panel-raised);
+    border-radius: 24px;
+    border-width: 1px;
+    border-color: var(--stroke-strong);
+    padding: 18px;
+}
+
+.modal__title {
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: var(--ink);
+    margin-bottom: 2px;
+}
+
+.modal__subtitle {
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-bottom: 14px;
+    white-space: normal;
+}
+
+/* --------------------------------------------------------------------- chips */
+
+.chip {
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--panel);
+    border-radius: 999px;
+    border-width: 1px;
+    border-color: var(--stroke);
+    padding-left: 12px;
+    padding-right: 14px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin-right: 8px;
+}
+
+.chip__icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    margin-right: 7px;
+}
+
+.chip__icon--coins { background-color: var(--gold); }
+.chip__icon--essence { background-color: var(--teal); }
+.chip__icon--keys { background-color: var(--violet); }
+
+.chip__value {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: var(--ink);
+}
+
+/* -------------------------------------------------------------------- buttons */
+
+.button {
+    min-height: 48px;
+    border-radius: var(--radius-sm);
+    border-width: 1px;
+    border-color: var(--stroke-strong);
+    background-color: var(--panel-raised);
+    color: var(--ink);
+    font-size: 15px;
+    -unity-font-style: bold;
+    padding-left: 18px;
+    padding-right: 18px;
+    transition-property: background-color, scale;
+    transition-duration: 0.12s;
+}
+
+.button:hover { background-color: rgba(46, 52, 76, 0.96); }
+.button:active { scale: 0.97 0.97; }
+
+.button:disabled {
+    opacity: 0.42;
+}
+
+.button--primary {
+    background-color: var(--gold);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: rgb(32, 24, 8);
+}
+
+.button--primary:hover { background-color: rgb(255, 214, 122); }
+
+.button--ad {
+    background-color: rgba(104, 226, 214, 0.18);
+    border-color: var(--teal);
+    color: var(--teal);
+}
+
+.button--ghost {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: var(--stroke);
+}
+
+.button--icon {
+    width: 54px;
+    height: 54px;
+    min-height: 54px;
+    padding-left: 0;
+    padding-right: 0;
+    border-radius: 16px;
+    font-size: 20px;
+}
+
+/* ----------------------------------------------------------------------- HUD */
+
+.hud__top {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.hud__clock {
+    align-items: flex-end;
+}
+
+.hud__clock-label {
+    font-size: 13px;
+    color: var(--ink-dim);
+}
+
+.hud__rate {
+    font-size: 12px;
+    color: var(--gold);
+}
+
+.hud__bottom {
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+.level {
+    width: 168px;
+    margin-top: 8px;
+}
+
+.level__row {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.level__label {
+    font-size: 11px;
+    color: var(--ink-dim);
+}
+
+.level__track {
+    height: 6px;
+    background-color: var(--panel-sunken);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.level__fill {
+    height: 100%;
+    background-color: var(--violet);
+    border-radius: 999px;
+    width: 0;
+    transition-property: width;
+    transition-duration: 0.4s;
+}
+
+/* -------------------------------------------------------------------- toasts */
+
+.toasts {
+    position: absolute;
+    left: 12px;
+    bottom: 92px;
+    width: 62%;
+    max-width: 380px;
+}
+
+.toast {
+    background-color: var(--panel);
+    border-left-width: 3px;
+    border-left-color: var(--gold);
+    border-radius: 10px;
+    padding: 9px 12px;
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--ink);
+    white-space: normal;
+    opacity: 1;
+    transition-property: opacity, translate;
+    transition-duration: 0.35s;
+}
+
+.toast--fading {
+    opacity: 0;
+    translate: -24px 0;
+}
+
+/* ----------------------------------------------------------------- creatures */
+
+.card {
+    width: 96px;
+    margin: 6px;
+    align-items: center;
+    background-color: var(--panel);
+    border-radius: var(--radius-sm);
+    border-width: 2px;
+    border-color: var(--stroke);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    transition-property: scale, background-color;
+    transition-duration: 0.12s;
+}
+
+.card:hover { scale: 1.04 1.04; }
+
+.card--locked { opacity: 0.45; }
+
+.card--common { border-color: var(--rarity-common); }
+.card--uncommon { border-color: var(--rarity-uncommon); }
+.card--rare { border-color: var(--rarity-rare); }
+.card--epic { border-color: var(--rarity-epic); }
+.card--legendary { border-color: var(--rarity-legendary); }
+
+.card__portrait {
+    width: 66px;
+    height: 66px;
+    border-radius: 12px;
+    background-color: var(--panel-sunken);
+    margin-bottom: 7px;
+}
+
+.card__portrait--unknown {
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.card__name {
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: var(--ink);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.card__count {
+    font-size: 11px;
+    color: var(--ink-dim);
+}
+
+.grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* ------------------------------------------------------------------- inspector */
+
+.inspector {
+    position: absolute;
+    right: 12px;
+    bottom: 92px;
+    width: 244px;
+}
+
+.inspector__name {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: var(--ink);
+}
+
+.inspector__species {
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 10px;
+}
+
+.need {
+    margin-top: 7px;
+}
+
+.need__row {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.need__label {
+    font-size: 11px;
+    color: var(--ink-dim);
+}
+
+.need__track {
+    height: 5px;
+    background-color: var(--panel-sunken);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 3px;
+}
+
+.need__fill {
+    height: 100%;
+    border-radius: 999px;
+    transition-property: width;
+    transition-duration: 0.3s;
+}
+
+.need__fill--good { background-color: var(--success); }
+.need__fill--warn { background-color: var(--gold); }
+.need__fill--bad { background-color: var(--danger); }
+
+/* ----------------------------------------------------------------- box screen */
+
+.box-list {
+    flex-direction: column;
+}
+
+.box-entry {
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--panel);
+    border-radius: var(--radius-sm);
+    border-width: 1px;
+    border-color: var(--stroke);
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.box-entry__art {
+    width: 58px;
+    height: 58px;
+    border-radius: 12px;
+    margin-right: 12px;
+}
+
+.box-entry__name {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: var(--ink);
+}
+
+.box-entry__odds {
+    font-size: 11px;
+    color: var(--ink-dim);
+    white-space: normal;
+}
+
+.reveal {
+    align-items: center;
+    justify-content: center;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.reveal__rarity {
+    font-size: 13px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+}
+
+.reveal__name {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: var(--ink);
+    margin-top: 2px;
+}
+
+.reveal__flavour {
+    font-size: 13px;
+    color: var(--ink-dim);
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-top: 8px;
+}
+
+.reveal__badge {
+    background-color: var(--gold);
+    color: rgb(30, 22, 6);
+    font-size: 11px;
+    -unity-font-style: bold;
+    border-radius: 999px;
+    padding: 3px 10px;
+    margin-top: 10px;
+}
+
+/* --------------------------------------------------------------- expand screen */
+
+.tile-option {
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--panel);
+    border-radius: var(--radius-sm);
+    border-width: 1px;
+    border-color: var(--stroke);
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.tile-option--locked { opacity: 0.5; }
+
+.tile-option__swatch {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    margin-right: 12px;
+}
+
+.tile-option__name {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: var(--ink);
+}
+
+.tile-option__meta {
+    font-size: 11px;
+    color: var(--ink-dim);
+    white-space: normal;
+}
+
+.tile-option__cost {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: var(--gold);
+}
+
+/* ------------------------------------------------------------------- floaters */
+
+.floater {
+    position: absolute;
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: var(--gold);
+}
+
+/* ------------------------------------------------------------------- splash */
+/* First thing anyone sees. Black, one mark, one word, then the world fades up. */
+
+.splash {
+    background-color: rgb(8, 9, 14);
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.9s;
+}
+
+.splash--gone {
+    opacity: 0;
+}
+
+.splash__emblem {
+    width: 148px;
+    height: 148px;
+    opacity: 0;
+    scale: 0.86 0.86;
+    transition-property: opacity, scale;
+    transition-duration: 1.1s;
+}
+
+.splash__word {
+    font-size: 17px;
+    letter-spacing: 9px;
+    color: rgba(255, 214, 150, 0.85);
+    margin-top: 18px;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 1.1s;
+}
+
+.splash--lit .splash__emblem { opacity: 1; scale: 1 1; }
+.splash--lit .splash__word { opacity: 1; }
+
+/* -------------------------------------------------------------- title screen */
+
+.title {
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8%;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.7s;
+}
+
+.title--gone {
+    opacity: 0;
+}
+
+/* A soft floor gradient so the buttons sit on something without hiding the diorama. */
+.title__vignette {
+    background-image: linear-gradient(
+        to top,
+        rgba(6, 7, 14, 0.92) 0%,
+        rgba(6, 7, 14, 0.55) 34%,
+        rgba(6, 7, 14, 0.0) 62%);
+}
+
+.title__content {
+    align-items: center;
+}
+
+.title__emblem {
+    width: 132px;
+    height: 132px;
+    margin-bottom: 6px;
+}
+
+.title__name {
+    font-size: 34px;
+    -unity-font-style: bold;
+    letter-spacing: 7px;
+    color: rgb(255, 236, 208);
+}
+
+.title__tagline {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(255, 236, 208, 0.6);
+    margin-top: 4px;
+}
+
+.title__credits {
+    position: absolute;
+    max-width: 460px;
+}
+
+/* ------------------------------------------------------------------ subtitle */
+/* The narrator is optional listening; the band makes it optional reading too. */
+
+.subtitle {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: 15%;
+    align-items: center;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+}
+
+.subtitle--fading {
+    opacity: 0;
+}
+
+.subtitle__text {
+    background-color: rgba(6, 7, 14, 0.72);
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: var(--stroke);
+    padding: 10px 18px;
+    font-size: 15px;
+    color: rgb(246, 240, 228);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    -unity-font-style: italic;
+}
+
+/* --------------------------------------------------------------- reveal card */
+
+.reveal-layer {
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8%;
+    /* Only the card takes input; the 3D reveal behind stays visible and unblocked. */
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.reveal-card {
+    width: 88%;
+    max-width: 460px;
+    background-color: rgba(14, 16, 26, 0.94);
+    border-radius: 24px;
+    border-width: 1px;
+    border-color: var(--stroke-strong);
+    padding: 20px;
+    align-items: center;
+    opacity: 0;
+    translate: 0 26px;
+    transition-property: opacity, translate;
+    transition-duration: 0.45s;
+}
+
+.reveal-card--in {
+    opacity: 1;
+    translate: 0 0;
+}
+
+/* ---------------------------------------------------------------- onboarding */
+
+.coach {
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 22%;
+}
+
+.coach__card {
+    width: 86%;
+    max-width: 430px;
+    background-color: rgba(14, 16, 26, 0.95);
+    border-radius: 20px;
+    border-width: 1px;
+    border-color: var(--gold);
+    padding: 16px 18px;
+    opacity: 0;
+    translate: 0 18px;
+    transition-property: opacity, translate;
+    transition-duration: 0.35s;
+}
+
+.coach__card--in {
+    opacity: 1;
+    translate: 0 0;
+}
+
+.coach__title {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    -unity-font-style: bold;
+}
+
+.coach__body {
+    font-size: 15px;
+    color: var(--ink);
+    white-space: normal;
+    margin-top: 6px;
+}
+
+/* A ring drawn around whatever the current step wants the player to press. */
+.coach__spotlight {
+    position: absolute;
+    border-width: 2px;
+    border-color: var(--gold);
+    border-radius: 16px;
+    background-color: rgba(255, 199, 88, 0.10);
+}
+
+/* ------------------------------------------------------------------ settings */
+
+.setting__label {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--ink-dim);
+    margin-top: 12px;
+    margin-bottom: 2px;
+}
+
+.setting__slider {
+    margin-bottom: 2px;
+}
+
+.setting__toggle {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--ink);
+}
+
+/* --------------------------------------------------------------------- flash */
+
+.flash {
+    background-color: rgba(255, 255, 255, 0);
+    opacity: 0;
+}

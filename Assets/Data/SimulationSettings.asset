@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a4f0d68d8d66524caa899dd8519f507, type: 3}
+  m_Name: SimulationSettings
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.SimulationSettings
+  minutesPerDay: 12
+  dawn: 0.24
+  dusk: 0.78
+  brainTicksPerSecond: 8
+  brainBuckets: 4
+  baseSightRadius: 4.5
+  spatialCellSize: 2
+  maxNeighbours: 8
+  switchHysteresis: 0.12
+  scoreNoise: 0.06
+  separationMultiplier: 2.2
+  separationStrength: 1.4
+  steeringAcceleration: 6
+  hungerSeekThreshold: 0.45
+  energySleepThreshold: 0.3
+  sleepRecoveryRate: 0.4
+  foodRestoreAmount: 0.55
+  maxFightDuration: 12
+  knockoutSeconds: 20
+  fleeSafeDistance: 6
+  interactionCoinReward: 4
+  rewardCooldownSeconds: 45
+  offlineCapHours: 8
+  offlineEfficiency: 0.5

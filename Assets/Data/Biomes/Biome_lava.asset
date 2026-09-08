@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db88e10dfc5db014bb636be768b76021, type: 3}
+  m_Name: Biome_lava
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.BiomeDefinition
+  id: lava
+  displayName: Ember Flats
+  description: The ground is warm. The dragon considers this a feature.
+  icon: {fileID: 0}
+  unlockCurrency: 0
+  unlockCost: 7500
+  requiredLevel: 12
+  groundLow: {r: 0.20392157, g: 0.13333334, b: 0.1254902, a: 1}
+  groundHigh: {r: 0.36078432, g: 0.20392157, b: 0.16470589, a: 1}
+  cliffColour: {r: 0.17254902, g: 0.11764706, b: 0.10980392, a: 1}
+  reliefHeight: 0.36
+  reliefScale: 0.5
+  hasWater: 1
+  waterLevel: -0.16
+  waterShallow: {r: 1, g: 0.62, b: 0.2, a: 0.9}
+  waterDeep: {r: 0.92, g: 0.24, b: 0.08, a: 1}
+  sunTintDay: {r: 1, g: 1, b: 1, a: 1}
+  sunTintNight: {r: 0.46, g: 0.56, b: 0.9, a: 1}
+  fogColour: {r: 0.3764706, g: 0.20392157, b: 0.15686275, a: 1}
+  fogDensity: 0.038
+  ambientLift: 0.2
+  scatter:
+  - kind: 2
+    density: 0.24
+    scaleRange: {x: 0.6, y: 1.6}
+    minSpacing: 0.6
+    primary: {r: 0.21960784, g: 0.15686275, b: 0.14901961, a: 1}
+    secondary: {r: 0.14901961, g: 0.10980392, b: 0.101960786, a: 1}
+    windSwept: 0
+    allowInWater: 0
+  - kind: 6
+    density: 0.08
+    scaleRange: {x: 0.7, y: 1.5}
+    minSpacing: 0.85
+    primary: {r: 0.9882353, g: 0.5176471, b: 0.20392157, a: 1}
+    secondary: {r: 0.7764706, g: 0.28235295, b: 0.11764706, a: 1}
+    windSwept: 0
+    allowInWater: 0
+  foodNodes: 2
+  foodDiets: 0200000004000000
+  nocturnalAffinity: 0
+  comfortCoinMultiplier: 1.25
+  ambienceKey: 

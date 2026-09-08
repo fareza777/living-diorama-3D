@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9840fc7e851d96488ec8aa3cb40c23c, type: 3}
+  m_Name: RelationRules
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.RelationRuleSet
+  rules:
+  - selfTag: predator
+    otherTag: critter
+    stance: 6
+    priority: 12
+    minBravery: 0
+    minAggression: 0
+  - selfTag: predator
+    otherTag: mischief
+    stance: 6
+    priority: 10
+    minBravery: 0
+    minAggression: 0
+  - selfTag: lawful
+    otherTag: thief
+    stance: 5
+    priority: 40
+    minBravery: 0
+    minAggression: 0
+  - selfTag: lawful
+    otherTag: undead
+    stance: 5
+    priority: 25
+    minBravery: 0
+    minAggression: 0
+  - selfTag: lawful
+    otherTag: mischief
+    stance: 5
+    priority: 14
+    minBravery: 0
+    minAggression: 0.4
+  - selfTag: mischief
+    otherTag: lawful
+    stance: 4
+    priority: 12
+    minBravery: 0
+    minAggression: 0
+  - selfTag: mischief
+    otherTag: predator
+    stance: 4
+    priority: 12
+    minBravery: 0
+    minAggression: 0
+  - selfTag: critter
+    otherTag: predator
+    stance: 4
+    priority: 14
+    minBravery: 0
+    minAggression: 0
+  - selfTag: 
+    otherTag: apex
+    stance: 4
+    priority: 18
+    minBravery: 0
+    minAggression: 0
+  - selfTag: undead
+    otherTag: living
+    stance: 5
+    priority: 10
+    minBravery: 0
+    minAggression: 0.3
+  - selfTag: living
+    otherTag: undead
+    stance: 3
+    priority: 6
+    minBravery: 0
+    minAggression: 0
+  - selfTag: critter
+    otherTag: critter
+    stance: 1
+    priority: 4
+    minBravery: 0
+    minAggression: 0
+  - selfTag: pack
+    otherTag: pack
+    stance: 1
+    priority: 6
+    minBravery: 0
+    minAggression: 0
+  - selfTag: humanoid
+    otherTag: humanoid
+    stance: 2
+    priority: 2
+    minBravery: 0
+    minAggression: 0
+  overrides: []
+  defaultStance: 0
+  intimidationSizeGap: 2

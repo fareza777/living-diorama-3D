@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cccca6ac4ddd8c48adde79e388521e4, type: 3}
+  m_Name: ProgressionSettings
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.ProgressionSettings
+  tileSize: 6
+  startingTilesPerSide: 1
+  maxRingRadius: 3
+  baseTileCost: 250
+  tileCostRingMultiplier: 1.85
+  creaturesPerTile: 5
+  hardPopulationCap: 32
+  baseXpPerLevel: 120
+  xpCurveExponent: 1.35
+  maxLevel: 60
+  xpPerDiscovery: 40
+  xpPerBoxOpen: 8
+  xpPerInteraction: 2
+  xpPerTileUnlock: 60
+  startingCoins: 350
+  startingEssence: 0
+  startingBoxKeys: 1
+  startingCreatures:
+  - creatureId: goblin
+    count: 1
+  - creatureId: slime
+    count: 2
+  interstitialEveryNBoxOpens: 6
+  interstitialMinSecondsBetween: 240
+  rewardedAdCoins: 150
+  rewardedOfflineMultiplier: 2

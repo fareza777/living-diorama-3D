@@ -1,0 +1,7 @@
+/* Runtime theme for the UI Toolkit panel.
+ *
+ * Importing Unity's default theme gives buttons, scroll views and sliders their base
+ * appearance; LivingDiorama.uss then restyles them. Without this import the runtime UI
+ * renders with no default styling at all.
+ */
+@import url("unity-theme://default");

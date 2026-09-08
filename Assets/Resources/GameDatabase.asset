@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d74dffa02fbc1ec4095c65d19e9866bc, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.GameDatabase
+  creatures:
+  - {fileID: 11400000, guid: 53dd4c748693df047af62ab8b8dca150, type: 2}
+  - {fileID: 11400000, guid: 88c8d2fc1df06f142bcbde56098a4ff6, type: 2}
+  - {fileID: 11400000, guid: 48c63328428f3d04da720e7393176e3f, type: 2}
+  - {fileID: 11400000, guid: a949dfd9084a47f438a948fbcb1e837c, type: 2}
+  - {fileID: 11400000, guid: 39eafcb60eecb79448339f515017a1c2, type: 2}
+  - {fileID: 11400000, guid: d2e1078dea1d21c46b11dcdf8ad8d99a, type: 2}
+  biomes:
+  - {fileID: 11400000, guid: 06f4464a4811c0d419d7eaaac64c11fb, type: 2}
+  - {fileID: 11400000, guid: 845f4caf3e4931c429bc57ca1502969d, type: 2}
+  - {fileID: 11400000, guid: 81c3fe04d818dbc4fa8ace8ced5fa8f5, type: 2}
+  - {fileID: 11400000, guid: 361616d054e561049b14d10873e49d5f, type: 2}
+  - {fileID: 11400000, guid: adf61adb707e7414d90ef962c95e4488, type: 2}
+  - {fileID: 11400000, guid: a799de9a8c8503240813e445e31f9acc, type: 2}
+  - {fileID: 11400000, guid: a968b6f7e35bfde4ba95880b5338de9a, type: 2}
+  boxes:
+  - {fileID: 11400000, guid: 33ec70e5ef201734fb61058668847186, type: 2}
+  - {fileID: 11400000, guid: bd4c00b3b622ef64d852768b369f2834, type: 2}
+  relations: {fileID: 11400000, guid: 67e9de03011f6c84284ac491b62bfb3d, type: 2}
+  simulation: {fileID: 11400000, guid: 6bad44addeb736545ade09d6378cab4b, type: 2}
+  progression: {fileID: 11400000, guid: 18b74999538b5444abfcb7fe6a9fbcbf, type: 2}

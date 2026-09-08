@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27bf608d9836a90429c320f765de1614, type: 3}
+  m_Name: Box_wooden
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.MysteryBoxDefinition
+  id: wooden_box
+  displayName: Wooden Box
+  description: Whatever was wandering nearby when the lid went on.
+  icon: {fileID: 0}
+  accentColour: {r: 0.72156864, g: 0.5176471, b: 0.28235295, a: 1}
+  costCurrency: 0
+  cost: 120
+  rewardedAdEligible: 1
+  rewardedAdCooldownSeconds: 900
+  weights:
+  - rarity: 0
+    weight: 68
+  - rarity: 1
+    weight: 24
+  - rarity: 2
+    weight: 8
+  pityRareAfter: 10
+  pityEpicAfter: 0
+  pool:
+  - {fileID: 11400000, guid: 53dd4c748693df047af62ab8b8dca150, type: 2}
+  - {fileID: 11400000, guid: 88c8d2fc1df06f142bcbde56098a4ff6, type: 2}
+  - {fileID: 11400000, guid: 48c63328428f3d04da720e7393176e3f, type: 2}
+  - {fileID: 11400000, guid: a949dfd9084a47f438a948fbcb1e837c, type: 2}
+  duplicateEssence: 12
+  duplicatesGrantCopy: 1

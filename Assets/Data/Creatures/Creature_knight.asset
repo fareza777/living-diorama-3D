@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0508303b86c524e80a43e918786c25, type: 3}
+  m_Name: Creature_knight
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.CreatureDefinition
+  id: knight
+  displayName: Knight
+  flavourText: Sworn to keep the peace. Interprets 'the peace' quite broadly.
+  rarity: 2
+  icon: {fileID: 21300000, guid: c3cb98ac49b51384a9e1c8e82c8b06e7, type: 3}
+  modelPrefab: {fileID: 0}
+  streamingModelFile: knight.glb
+  autoFitToBodyHeight: 1
+  modelScale: 1
+  groundOffset: 0
+  modelEuler: {x: 0, y: 0, z: 0}
+  bodySize: 2
+  bodyRadius: 0.36
+  bodyHeight: 0.95
+  locomotion: 4
+  walkSpeed: 0.65
+  runSpeed: 1.7
+  turnSpeedDeg: 420
+  gaitBob: 0.06
+  gaitFrequency: 1.7
+  diet: 3
+  activity: 0
+  tags:
+  - humanoid
+  - lawful
+  - guardian
+  - armoured
+  - living
+  preferredBiomes:
+  - forest
+  - dungeon
+  aggression: 0.48
+  bravery: 0.95
+  sociability: 0.45
+  curiosity: 0.35
+  mischief: 0
+  lovesWater: 0.1
+  hungerRate: 0.09
+  energyRate: 0.07
+  socialRate: 0.05
+  maxHealth: 55
+  attackDamage: 9
+  attackInterval: 1.4
+  attackRange: 1.1
+  coinsPerHour: 18
+  discoveryEssence: 90
+  voiceClipKey: 
+  footstepClipKey: 

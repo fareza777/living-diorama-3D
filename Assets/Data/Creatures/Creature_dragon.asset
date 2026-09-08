@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0508303b86c524e80a43e918786c25, type: 3}
+  m_Name: Creature_dragon
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.CreatureDefinition
+  id: dragon
+  displayName: Dragon Whelp
+  flavourText: Barely bigger than the knight, and the entire diorama defers to it
+    anyway.
+  rarity: 4
+  icon: {fileID: 21300000, guid: b6b9a428542e216459736c08545dc6fb, type: 3}
+  modelPrefab: {fileID: 0}
+  streamingModelFile: dragon.glb
+  autoFitToBodyHeight: 1
+  modelScale: 1
+  groundOffset: 0
+  modelEuler: {x: 0, y: 0, z: 0}
+  bodySize: 3
+  bodyRadius: 0.42
+  bodyHeight: 1.05
+  locomotion: 5
+  walkSpeed: 0.8
+  runSpeed: 2.2
+  turnSpeedDeg: 420
+  gaitBob: 0.1
+  gaitFrequency: 1.2
+  diet: 2
+  activity: 3
+  tags:
+  - dragon
+  - apex
+  - beast
+  - winged
+  - living
+  preferredBiomes:
+  - lava
+  - cave
+  aggression: 0.6
+  bravery: 1
+  sociability: 0.2
+  curiosity: 0.5
+  mischief: 0.3
+  lovesWater: 0.2
+  hungerRate: 0.09
+  energyRate: 0.07
+  socialRate: 0.05
+  maxHealth: 90
+  attackDamage: 14
+  attackInterval: 1.4
+  attackRange: 1.3
+  coinsPerHour: 40
+  discoveryEssence: 300
+  voiceClipKey: 
+  footstepClipKey: 

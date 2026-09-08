@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/UI/LivingDiorama.uss" />
+
+    <!-- ===================================================== persistent HUD -->
+    <ui:VisualElement name="hud" class="root" picking-mode="Ignore">
+
+        <ui:VisualElement class="hud__top" picking-mode="Ignore">
+            <ui:VisualElement class="column" picking-mode="Ignore">
+                <ui:VisualElement class="row" picking-mode="Ignore">
+                    <ui:VisualElement class="chip">
+                        <ui:VisualElement class="chip__icon chip__icon--coins" />
+                        <ui:Label name="coins-value" class="chip__value" text="0" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="chip">
+                        <ui:VisualElement class="chip__icon chip__icon--essence" />
+                        <ui:Label name="essence-value" class="chip__value" text="0" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="keys-chip" class="chip">
+                        <ui:VisualElement class="chip__icon chip__icon--keys" />
+                        <ui:Label name="keys-value" class="chip__value" text="0" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="level" picking-mode="Ignore">
+                    <ui:VisualElement class="level__row" picking-mode="Ignore">
+                        <ui:Label name="level-label" class="level__label" text="Level 1" />
+                        <ui:Label name="level-xp" class="level__label" text="0 / 120" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="level__track" picking-mode="Ignore">
+                        <ui:VisualElement name="level-fill" class="level__fill" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="spacer" picking-mode="Ignore" />
+
+            <ui:VisualElement class="hud__clock column" picking-mode="Ignore">
+                <ui:Label name="clock-label" class="hud__clock-label" text="Day 1 - 07:00" />
+                <ui:Label name="rate-label" class="hud__rate" text="+0 / hr" />
+                <ui:Label name="population-label" class="hud__clock-label" text="0 / 5 creatures" />
+
+                <ui:VisualElement class="row" style="margin-top: 8px;">
+                    <ui:Button name="btn-turntable" class="button button--icon button--ghost" text="&#8635;"
+                               tooltip="Turntable" />
+                    <ui:VisualElement style="width: 6px;" />
+                    <ui:Button name="btn-settings" class="button button--icon button--ghost" text="&#9881;"
+                               tooltip="Settings" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="spacer" picking-mode="Ignore" />
+
+        <ui:VisualElement class="hud__bottom" picking-mode="Ignore">
+            <ui:Button name="btn-box" class="button button--primary" text="Mystery Box" />
+            <ui:VisualElement style="width: 8px;" picking-mode="Ignore" />
+            <ui:Button name="btn-collection" class="button button--ghost" text="Collection" />
+            <ui:VisualElement style="width: 8px;" picking-mode="Ignore" />
+            <ui:Button name="btn-expand" class="button button--ghost" text="Expand" />
+            <ui:VisualElement class="spacer" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- ========================================================== overlays -->
+    <ui:VisualElement name="toasts" class="toasts" picking-mode="Ignore" />
+    <ui:VisualElement name="floaters" class="fill" picking-mode="Ignore" />
+
+    <ui:VisualElement name="subtitle-band" class="subtitle hidden" picking-mode="Ignore">
+        <ui:Label name="subtitle-text" class="subtitle__text" text="" />
+    </ui:VisualElement>
+
+    <ui:VisualElement name="inspector" class="inspector panel hidden">
+        <ui:Label name="inspector-name" class="inspector__name" text="Creature" />
+        <ui:Label name="inspector-species" class="inspector__species" text="" />
+
+        <ui:VisualElement name="inspector-needs" class="column" />
+
+        <ui:VisualElement class="row" style="margin-top: 12px;">
+            <ui:Button name="btn-inspector-recall" class="button button--ghost" text="Recall"
+                       style="flex-grow: 1; min-height: 40px; font-size: 13px;" />
+            <ui:VisualElement style="width: 8px;" />
+            <ui:Button name="btn-inspector-close" class="button button--ghost" text="Close"
+                       style="min-height: 40px; font-size: 13px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- ============================================================ modals -->
+    <ui:VisualElement name="modal-layer" class="fill scrim modal hidden">
+
+        <!-- ================================================= mystery boxes -->
+        <ui:VisualElement name="modal-box" class="modal__card hidden">
+            <ui:Label class="modal__title" text="Mystery Boxes" />
+            <ui:Label class="modal__subtitle"
+                      text="Every box holds one creature. Rarer boxes hold rarer company." />
+
+            <ui:ScrollView name="box-list" class="box-list" style="max-height: 360px;" />
+
+            <ui:Label name="box-message" class="modal__subtitle hidden" text="" />
+
+            <ui:Button name="btn-box-close" class="button button--ghost" text="Close"
+                       style="margin-top: 12px;" />
+        </ui:VisualElement>
+
+        <!-- ==================================================== collection -->
+        <ui:VisualElement name="modal-collection" class="modal__card hidden">
+            <ui:Label class="modal__title" text="Collection" />
+            <ui:Label name="collection-progress" class="modal__subtitle" text="0 of 0 discovered" />
+
+            <ui:ScrollView name="collection-grid" style="max-height: 380px;">
+                <ui:VisualElement name="collection-grid-inner" class="grid" />
+            </ui:ScrollView>
+
+            <ui:VisualElement name="collection-detail" class="panel panel--raised hidden"
+                              style="margin-top: 10px;">
+                <ui:Label name="collection-detail-name" class="inspector__name" text="" />
+                <ui:Label name="collection-detail-flavour" class="modal__subtitle" text="" />
+                <ui:Label name="collection-detail-tags" class="level__label" text="" />
+                <ui:VisualElement class="row" style="margin-top: 10px;">
+                    <ui:Button name="btn-place" class="button button--primary" text="Place in diorama"
+                               style="flex-grow: 1;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:Button name="btn-collection-close" class="button button--ghost" text="Close"
+                       style="margin-top: 12px;" />
+        </ui:VisualElement>
+
+        <!-- ======================================================== expand -->
+        <ui:VisualElement name="modal-expand" class="modal__card hidden">
+            <ui:Label class="modal__title" text="Expand the Diorama" />
+            <ui:Label name="expand-subtitle" class="modal__subtitle"
+                      text="More land means more creatures, and more room for them to get into trouble." />
+
+            <ui:ScrollView name="expand-list" style="max-height: 360px;" />
+
+            <ui:Button name="btn-expand-close" class="button button--ghost" text="Close"
+                       style="margin-top: 12px;" />
+        </ui:VisualElement>
+
+        <!-- ================================================= welcome back -->
+        <ui:VisualElement name="modal-welcome" class="modal__card hidden">
+            <ui:Label class="modal__title" text="Welcome back" />
+            <ui:Label name="welcome-body" class="modal__subtitle" text="" />
+            <ui:Label name="welcome-amount" class="reveal__name" text="+0" />
+
+            <ui:VisualElement class="column" style="margin-top: 14px;">
+                <ui:Button name="btn-welcome-double" class="button button--ad"
+                           text="Watch an ad to double it" />
+                <ui:VisualElement style="height: 8px;" />
+                <ui:Button name="btn-welcome-claim" class="button button--primary" text="Collect" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ====================================================== settings -->
+        <ui:VisualElement name="modal-settings" class="modal__card hidden">
+            <ui:Label class="modal__title" text="Settings" />
+            <ui:Label class="modal__subtitle" text="Everything here is stored on this device." />
+
+            <ui:Label class="setting__label" text="Music &amp; ambience" />
+            <ui:Slider name="slider-music" low-value="0" high-value="1" value="0.55" class="setting__slider" />
+
+            <ui:Label class="setting__label" text="Sound effects" />
+            <ui:Slider name="slider-sfx" low-value="0" high-value="1" value="0.9" class="setting__slider" />
+
+            <ui:Label class="setting__label" text="Narrator" />
+            <ui:Slider name="slider-voice" low-value="0" high-value="1" value="1" class="setting__slider" />
+
+            <ui:Toggle name="toggle-subtitles" label="Subtitles" value="true" class="setting__toggle" />
+            <ui:Toggle name="toggle-turntable" label="Auto turntable" value="false" class="setting__toggle" />
+
+            <ui:VisualElement class="panel" style="margin-top: 14px; background-color: rgba(255,118,106,0.08);">
+                <ui:Label class="setting__label" text="Danger zone" />
+                <ui:Label class="tile-option__meta"
+                          text="Deletes your diorama, your collection and your progress. This cannot be undone." />
+                <ui:Button name="btn-reset-save" class="button button--ghost" text="Erase everything"
+                           style="margin-top: 8px; border-color: rgb(255,118,106); color: rgb(255,118,106);" />
+                <ui:Label name="reset-confirm" class="tile-option__meta hidden"
+                          text="Tap again within five seconds to confirm." />
+            </ui:VisualElement>
+
+            <ui:Button name="btn-settings-close" class="button button--primary" text="Done"
+                       style="margin-top: 14px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- ================================================== reveal card -->
+    <!-- Sits above the modal layer: the 3D unboxing stays visible behind it. -->
+    <ui:VisualElement name="reveal-layer" class="fill reveal-layer hidden">
+        <ui:VisualElement name="reveal-card" class="reveal-card">
+            <ui:Label name="reveal-rarity" class="reveal__rarity" text="COMMON" />
+            <ui:Label name="reveal-name" class="reveal__name" text="Goblin" />
+            <ui:Label name="reveal-flavour" class="reveal__flavour" text="" />
+            <ui:Label name="reveal-badge" class="reveal__badge hidden" text="NEW SPECIES" />
+
+            <ui:VisualElement class="row" style="margin-top: 16px;">
+                <ui:Button name="btn-reveal-again" class="button button--ghost" text="Open another"
+                           style="flex-grow: 1;" />
+                <ui:VisualElement style="width: 8px;" />
+                <ui:Button name="btn-reveal-done" class="button button--primary" text="Add to diorama"
+                           style="flex-grow: 1;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- ==================================================== onboarding -->
+    <ui:VisualElement name="coach-layer" class="fill coach hidden" picking-mode="Ignore">
+        <ui:VisualElement name="coach-card" class="coach__card">
+            <ui:Label name="coach-title" class="coach__title" text="" />
+            <ui:Label name="coach-body" class="coach__body" text="" />
+            <ui:VisualElement class="row" style="margin-top: 12px;">
+                <ui:Button name="btn-coach-skip" class="button button--ghost" text="Skip tour"
+                           style="min-height: 38px; font-size: 12px;" />
+                <ui:VisualElement class="spacer" />
+                <ui:Button name="btn-coach-next" class="button button--primary" text="Next"
+                           style="min-height: 38px; font-size: 13px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- ================================================== title screen -->
+    <ui:VisualElement name="title-screen" class="fill title">
+        <ui:VisualElement name="title-vignette" class="fill title__vignette" picking-mode="Ignore" />
+
+        <ui:VisualElement name="title-content" class="title__content">
+            <ui:VisualElement name="title-emblem" class="title__emblem" />
+            <ui:Label class="title__name" text="LIVING DIORAMA" />
+            <ui:Label class="title__tagline" text="A small world that lives without you" />
+
+            <ui:VisualElement class="column" style="margin-top: 28px; width: 240px;">
+                <ui:Button name="btn-title-begin" class="button button--primary" text="Begin" />
+                <ui:VisualElement style="height: 10px;" />
+                <ui:Button name="btn-title-settings" class="button button--ghost" text="Settings" />
+                <ui:VisualElement style="height: 10px;" />
+                <ui:Button name="btn-title-credits" class="button button--ghost" text="Credits" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="title-credits" class="modal__card title__credits hidden">
+            <ui:Label class="modal__title" text="Credits" />
+            <ui:Label class="modal__subtitle"
+                      text="Creature meshes generated with Meshy. Narration and sound generated with ElevenLabs. Terrain, props, shaders, icons and the title emblem are all generated procedurally at runtime. Built in Unity with the Universal Render Pipeline. Plays entirely offline; nothing you do here leaves this device." />
+            <ui:Button name="btn-credits-close" class="button button--ghost" text="Back" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- ======================================================== splash -->
+    <ui:VisualElement name="splash" class="fill splash">
+        <ui:VisualElement name="splash-emblem" class="splash__emblem" />
+        <ui:Label name="splash-word" class="splash__word" text="LIVING DIORAMA" />
+    </ui:VisualElement>
+
+    <!-- ========================================================= flash -->
+    <ui:VisualElement name="flash" class="fill flash" picking-mode="Ignore" />
+</ui:UXML>

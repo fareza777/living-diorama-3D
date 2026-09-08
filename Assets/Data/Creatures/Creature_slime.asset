@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0508303b86c524e80a43e918786c25, type: 3}
+  m_Name: Creature_slime
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.CreatureDefinition
+  id: slime
+  displayName: Slime
+  flavourText: A contented blob. Its ambitions extend no further than the nearest
+    puddle.
+  rarity: 0
+  icon: {fileID: 21300000, guid: 4dfea5f33186d4a4aa15d587edfedb1c, type: 3}
+  modelPrefab: {fileID: 0}
+  streamingModelFile: slime.glb
+  autoFitToBodyHeight: 1
+  modelScale: 1
+  groundOffset: 0
+  modelEuler: {x: 0, y: 0, z: 0}
+  bodySize: 0
+  bodyRadius: 0.22
+  bodyHeight: 0.44
+  locomotion: 2
+  walkSpeed: 0.5
+  runSpeed: 1.1
+  turnSpeedDeg: 420
+  gaitBob: 0.16
+  gaitFrequency: 1.5
+  diet: 4
+  activity: 3
+  tags:
+  - blob
+  - critter
+  - small
+  - living
+  - harmless
+  preferredBiomes:
+  - forest
+  - river
+  aggression: 0.03
+  bravery: 0.25
+  sociability: 0.8
+  curiosity: 0.6
+  mischief: 0.05
+  lovesWater: 0.95
+  hungerRate: 0.09
+  energyRate: 0.07
+  socialRate: 0.05
+  maxHealth: 12
+  attackDamage: 1
+  attackInterval: 1.4
+  attackRange: 0.5
+  coinsPerHour: 5
+  discoveryEssence: 15
+  voiceClipKey: 
+  footstepClipKey: 
