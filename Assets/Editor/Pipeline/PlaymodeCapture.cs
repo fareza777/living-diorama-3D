@@ -280,7 +280,39 @@ namespace LivingDiorama.EditorTools
             }
 
             return $"{sim.Population} creatures, {ready} models loaded, " +
-                   $"clock {sim.Clock.Label}, doing [{string.Join(", ", behaviours)}]{EmoteReport()}";
+                   $"clock {sim.Clock.Label}, doing [{string.Join(", ", behaviours)}]" +
+                   $"{ClearanceReport(sim)}{EmoteReport()}";
+        }
+
+        /// <summary>
+        /// How far each creature's lowest point sits above the ground beneath it.
+        ///
+        /// Creatures standing slightly off the terrain is the kind of fault that survives
+        /// every other check: nothing throws, the screenshot looks broadly right, and it
+        /// only reads as wrong once you know to look. A number per creature makes it
+        /// obvious, and distinguishes a real hover from a hop caught mid-arc.
+        /// </summary>
+        static string ClearanceReport(EcosystemSimulation sim)
+        {
+            var parts = new List<string>();
+
+            foreach (CreatureAgent agent in sim.Agents)
+            {
+                if (agent.View == null || !agent.View.ModelReady) continue;
+
+                float lowest = float.MaxValue;
+                foreach (Renderer r in agent.GetComponentsInChildren<Renderer>())
+                {
+                    if (r is ParticleSystemRenderer) continue;
+                    lowest = Mathf.Min(lowest, r.bounds.min.y);
+                }
+                if (lowest > float.MaxValue * 0.5f) continue;
+
+                float ground = sim.Surface.SampleHeight(agent.transform.position);
+                parts.Add($"{agent.Definition.id} {(lowest - ground):+0.00;-0.00}");
+            }
+
+            return parts.Count == 0 ? "" : $", clearance [{string.Join(", ", parts)}]";
         }
 
         /// <summary>

@@ -108,21 +108,82 @@ namespace LivingDiorama.Diorama
             }
         }
 
+        /// <summary>
+        /// Height of the ground mesh at a point, as drawn.
+        ///
+        /// The terrain is faceted: vertices are sampled on a coarse grid and the triangles
+        /// between them are flat. Asking the noise function directly gives the height of a
+        /// smooth surface that is not the one on screen, so creatures placed by it stood
+        /// above the facets on every rise -- the "floating just off the ground" look. This
+        /// walks the same grid cell and the same diagonal the mesh builder chose, and
+        /// interpolates across the actual triangle.
+        /// </summary>
+        public static float SampleSurface(BiomeDefinition biome, Vector3 tileOrigin,
+                                          float tileSize, int seed, float worldX, float worldZ)
+        {
+            float step = tileSize / Resolution;
+            float waterWidth = biome.hasWater ? tileSize * 0.28f : 0f;
+
+            float localX = Mathf.Clamp(worldX - tileOrigin.x, 0f, tileSize);
+            float localZ = Mathf.Clamp(worldZ - tileOrigin.z, 0f, tileSize);
+
+            int gx = Mathf.Clamp((int)(localX / step), 0, Resolution - 1);
+            int gz = Mathf.Clamp((int)(localZ / step), 0, Resolution - 1);
+
+            float x0 = tileOrigin.x + gx * step;
+            float z0 = tileOrigin.z + gz * step;
+
+            float H(float wx, float wz) => TerrainNoise.Height(
+                wx, wz, seed, biome.reliefHeight, biome.reliefScale, waterWidth, biome.waterLevel);
+
+            float ha = H(x0, z0);
+            float hb = H(x0 + step, z0);
+            float hc = H(x0, z0 + step);
+            float hd = H(x0 + step, z0 + step);
+
+            // Position within the cell, 0..1 on each axis.
+            float u = Mathf.Clamp01((localX - gx * step) / step);
+            float v = Mathf.Clamp01((localZ - gz * step) / step);
+
+            // The builder alternates the diagonal in a checker pattern; follow it exactly,
+            // or the interpolation is right on half the cells and wrong on the other half.
+            if (((gx + gz) & 1) == 0)
+            {
+                // Triangles (a, c, b) and (b, c, d): the split runs from b to c.
+                return u + v <= 1f
+                    ? ha + (hb - ha) * u + (hc - ha) * v
+                    : hd + (hc - hd) * (1f - u) + (hb - hd) * (1f - v);
+            }
+
+            // Triangles (a, c, d) and (a, d, b): the split runs from a to d.
+            return v >= u
+                ? ha + (hd - hc) * u + (hc - ha) * v
+                : ha + (hb - ha) * u + (hd - hb) * v;
+        }
+
+        /// <summary>A point on the ground, in tile-local space.</summary>
+        static Vector3 Corner(float worldX, float worldZ, in TileContext ctx)
+        {
+            float y = TerrainNoise.Height(worldX, worldZ, ctx.Seed, ctx.Biome.reliefHeight,
+                                          ctx.Biome.reliefScale, ctx.WaterWidth, ctx.Biome.waterLevel);
+
+            return new Vector3(worldX - ctx.Origin.x, y, worldZ - ctx.Origin.z);
+        }
+
         /// <summary>Top of the slab wall at a point on the tile border.
         ///
         /// Where the river reaches the edge the riverbed is below the waterline, so a wall
         /// that stopped at the ground left the water plane projecting past the slab with
         /// daylight underneath it -- a blue lip hanging in mid-air. The wall carries on up
         /// to the surface of the water instead, which is also what the cut face of a real
-        /// diorama looks like: soil holding the water in.</summary>
-        static Vector3 Corner(float worldX, float worldZ, in TileContext ctx)
+        /// diorama looks like: soil holding the water in.
+        ///
+        /// This is the wall only. Raising the ground itself would fill the riverbed in.</summary>
+        static Vector3 SkirtCorner(float worldX, float worldZ, in TileContext ctx)
         {
-            float y = TerrainNoise.Height(worldX, worldZ, ctx.Seed, ctx.Biome.reliefHeight,
-                                          ctx.Biome.reliefScale, ctx.WaterWidth, ctx.Biome.waterLevel);
-
-            if (ctx.WaterWidth > 0.01f) y = Mathf.Max(y, ctx.Biome.waterLevel);
-
-            return new Vector3(worldX - ctx.Origin.x, y, worldZ - ctx.Origin.z);
+            Vector3 point = Corner(worldX, worldZ, in ctx);
+            if (ctx.WaterWidth > 0.01f) point.y = Mathf.Max(point.y, ctx.Biome.waterLevel);
+            return point;
         }
 
         static void AddSurfaceTriangle(Vector3 a, Vector3 b, Vector3 c, in TileContext ctx)
@@ -187,20 +248,20 @@ namespace LivingDiorama.Diorama
                 float t1 = t0 + step;
 
                 // South edge (z = 0), outward normal -Z.
-                AddSkirtQuad(Corner(ctx.Origin.x + t1, ctx.Origin.z, in ctx),
-                             Corner(ctx.Origin.x + t0, ctx.Origin.z, in ctx), in ctx);
+                AddSkirtQuad(SkirtCorner(ctx.Origin.x + t1, ctx.Origin.z, in ctx),
+                             SkirtCorner(ctx.Origin.x + t0, ctx.Origin.z, in ctx), in ctx);
 
                 // North edge (z = size), outward normal +Z.
-                AddSkirtQuad(Corner(ctx.Origin.x + t0, ctx.Origin.z + size, in ctx),
-                             Corner(ctx.Origin.x + t1, ctx.Origin.z + size, in ctx), in ctx);
+                AddSkirtQuad(SkirtCorner(ctx.Origin.x + t0, ctx.Origin.z + size, in ctx),
+                             SkirtCorner(ctx.Origin.x + t1, ctx.Origin.z + size, in ctx), in ctx);
 
                 // West edge (x = 0), outward normal -X.
-                AddSkirtQuad(Corner(ctx.Origin.x, ctx.Origin.z + t0, in ctx),
-                             Corner(ctx.Origin.x, ctx.Origin.z + t1, in ctx), in ctx);
+                AddSkirtQuad(SkirtCorner(ctx.Origin.x, ctx.Origin.z + t0, in ctx),
+                             SkirtCorner(ctx.Origin.x, ctx.Origin.z + t1, in ctx), in ctx);
 
                 // East edge (x = size), outward normal +X.
-                AddSkirtQuad(Corner(ctx.Origin.x + size, ctx.Origin.z + t1, in ctx),
-                             Corner(ctx.Origin.x + size, ctx.Origin.z + t0, in ctx), in ctx);
+                AddSkirtQuad(SkirtCorner(ctx.Origin.x + size, ctx.Origin.z + t1, in ctx),
+                             SkirtCorner(ctx.Origin.x + size, ctx.Origin.z + t0, in ctx), in ctx);
             }
         }
 

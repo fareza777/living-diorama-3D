@@ -195,7 +195,31 @@ namespace LivingDiorama.Presentation
 
             foreach (Renderer r in renderers)
             {
-                Bounds wb = r.bounds;
+                // Measure the mesh, not the renderer.
+                //
+                // Renderer.bounds on a skinned mesh is a generous runtime box meant for
+                // culling -- padded so no animation can escape it -- and the bind-pose
+                // bounds on the shared mesh are in the skeleton's space, not the
+                // renderer's. Either one puts the feet in the wrong place: measured
+                // against the ground, the goblin stood a fifth of a unit underneath it.
+                // Baking the pose gives the vertices where they actually are.
+                Bounds wb;
+
+                if (r is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
+                {
+                    var baked = new Mesh();
+                    skinned.BakeMesh(baked, true);
+                    wb = TransformBounds(baked.bounds, skinned.transform.localToWorldMatrix);
+                    UnityEngine.Object.Destroy(baked);
+                }
+                else
+                {
+                    Mesh mesh = r.GetComponent<MeshFilter>() is { } filter ? filter.sharedMesh : null;
+                    wb = mesh != null
+                        ? TransformBounds(mesh.bounds, r.transform.localToWorldMatrix)
+                        : r.bounds;
+                }
+
                 // Transform the eight corners so a rotated model still measures correctly.
                 for (int i = 0; i < 8; i++)
                 {
@@ -218,6 +242,22 @@ namespace LivingDiorama.Presentation
             }
 
             return !first;
+        }
+
+        /// <summary>World-space box enclosing a local box under a transform.</summary>
+        static Bounds TransformBounds(Bounds local, Matrix4x4 matrix)
+        {
+            Vector3 centre = matrix.MultiplyPoint3x4(local.center);
+            Vector3 e = local.extents;
+
+            // Sum the absolute contribution of each axis: the tightest AABB that still
+            // contains the rotated box.
+            Vector3 extents = new(
+                Mathf.Abs(matrix.m00) * e.x + Mathf.Abs(matrix.m01) * e.y + Mathf.Abs(matrix.m02) * e.z,
+                Mathf.Abs(matrix.m10) * e.x + Mathf.Abs(matrix.m11) * e.y + Mathf.Abs(matrix.m12) * e.z,
+                Mathf.Abs(matrix.m20) * e.x + Mathf.Abs(matrix.m21) * e.y + Mathf.Abs(matrix.m22) * e.z);
+
+            return new Bounds(centre, extents * 2f);
         }
 
         /// <summary>Move every material onto the stylised creature shader, keeping the

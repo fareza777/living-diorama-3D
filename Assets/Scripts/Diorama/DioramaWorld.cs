@@ -387,9 +387,10 @@ namespace LivingDiorama.Diorama
             BiomeDefinition biome = BiomeAt(world);
             if (biome == null) return 0f;
 
-            float waterWidth = biome.hasWater ? _tileSize * 0.28f : 0f;
-            return TerrainNoise.Height(world.x, world.z, _seed, biome.reliefHeight,
-                                       biome.reliefScale, waterWidth, biome.waterLevel);
+            // Sample the faceted mesh, not the smooth function behind it, so a creature
+            // stands on the ground the player can see.
+            return TileMeshBuilder.SampleSurface(biome, TileOrigin(CoordAt(world)), _tileSize,
+                                                 _seed, world.x, world.z);
         }
 
         public BiomeDefinition BiomeAt(Vector3 world)

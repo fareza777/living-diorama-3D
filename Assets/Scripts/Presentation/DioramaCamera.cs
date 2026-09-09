@@ -30,7 +30,7 @@ namespace LivingDiorama.Presentation
         [Header("Idle drift")]
         [Tooltip("Seconds of no input before the camera starts a slow orbit by itself. " +
                  "The diorama is meant to be watched, so it presents itself when left alone.")]
-        [SerializeField] float _idleDelay = 12f;
+        [SerializeField] float _idleDelay = 30f;
         [SerializeField] float _idleOrbitSpeed = 1.6f;
 
         /// <summary>Looking slightly down at a table-top object, the way you would at a
@@ -284,9 +284,12 @@ namespace LivingDiorama.Presentation
                 float current = (a.position - b.position).magnitude;
                 Zoom((previous - current) * _zoomSensitivity);
 
-                // The shared component of both fingers is a pan.
+                // The shared component of both fingers is a pan -- but only when the
+                // fingers are actually travelling together. Panning on every two-finger
+                // frame meant a pinch also slid the diorama sideways, so zooming never
+                // landed where you aimed it.
                 Vector2 shared = (a.deltaPosition + b.deltaPosition) * 0.5f;
-                Pan(shared);
+                if (shared.magnitude > Mathf.Abs(previous - current)) Pan(shared);
 
                 _dragDistance = 999f;   // never treat a pinch as a tap
             }
@@ -377,7 +380,15 @@ namespace LivingDiorama.Presentation
 
             _targetPivot.x = Mathf.Clamp(_targetPivot.x, c.x - limitX, c.x + limitX);
             _targetPivot.z = Mathf.Clamp(_targetPivot.z, c.z - limitZ, c.z + limitZ);
-            _targetPivot.y = 0f;
+
+            // Keep the height the framing chose.
+            //
+            // This used to slam the pivot to y = 0 on every pan and every pinch, while
+            // Frame aims at the middle of the solid about a metre below that -- so the
+            // first time you touched the diorama with two fingers the whole view jumped
+            // vertically and then would not go back. That is most of what made the camera
+            // feel like it was fighting you.
+            _targetPivot.y = Mathf.Clamp(_targetPivot.y, c.y - _bounds.extents.y, c.y + _bounds.extents.y);
         }
 
         void Pick(Vector2 screenPosition)
