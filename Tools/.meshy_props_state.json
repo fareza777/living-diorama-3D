@@ -1,0 +1,24 @@
+{
+  "props": {
+    "pine_tree": {
+      "preview_id": "01a086a5-24e0-7309-9625-afcef415168a",
+      "refine_id": "01a086a6-cd73-75c2-81a1-5eb60b11860d"
+    },
+    "broadleaf_tree": {
+      "preview_id": "01a086a5-39df-7734-980c-469872fa6bad",
+      "refine_id": "01a086a8-3369-74c9-9a56-36d8785483bb"
+    },
+    "rock": {
+      "preview_id": "01a086a5-4a65-71c2-a424-5f812cdf3892",
+      "refine_id": "01a086a6-d73e-7757-b1e3-87300b563f75"
+    },
+    "mushroom": {
+      "preview_id": "01a086a5-6381-71d9-bf91-2e00e868e9fb",
+      "refine_id": "01a086a6-de10-70e5-9a98-84570fb543b9"
+    },
+    "bush": {
+      "preview_id": "01a086a5-7b9c-73bd-a8d5-2a716d637618",
+      "refine_id": "01a086a8-3a29-7164-983b-4709dc487373"
+    }
+  }
+}

@@ -1068,3 +1068,21 @@
     color: var(--ink-faint);
     margin-bottom: 8px;
 }
+
+/* --------------------------------------------------------------- odds bar */
+
+.odds {
+    flex-direction: row;
+    height: 9px;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.55);
+}
+
+.odds__slice {
+    flex-shrink: 1;
+    height: 100%;
+}

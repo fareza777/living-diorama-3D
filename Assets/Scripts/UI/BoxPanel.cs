@@ -73,6 +73,8 @@ namespace LivingDiorama.UI
             text.Add(new Label(box.displayName) { });
             text.Q<Label>().AddToClassList("box-entry__name");
 
+            text.Add(OddsBar(box));
+
             var odds = new Label(DescribeOdds(box));
             odds.AddToClassList("box-entry__odds");
             text.Add(odds);
@@ -122,6 +124,37 @@ namespace LivingDiorama.UI
             return $"{seconds}s";
         }
 
+        /// <summary>
+        /// The odds as a band of colour rather than a row of percentages.
+        ///
+        /// A table of numbers is the most honest way to state a distribution and the
+        /// worst way to feel one. The bar says the same thing at a glance -- mostly
+        /// common, a sliver of gold -- and the exact figures stay underneath it for
+        /// anyone who wants them.
+        /// </summary>
+        static VisualElement OddsBar(MysteryBoxDefinition box)
+        {
+            var bar = new VisualElement();
+            bar.AddToClassList("odds");
+
+            foreach (Rarity rarity in new[]
+                     {
+                         Rarity.Common, Rarity.Uncommon, Rarity.Rare, Rarity.Epic, Rarity.Legendary,
+                     })
+            {
+                float share = box.ChanceOf(rarity);
+                if (share <= 0.0001f) continue;
+
+                var slice = new VisualElement();
+                slice.AddToClassList("odds__slice");
+                slice.style.flexGrow = share;
+                slice.style.backgroundColor = RarityColour(rarity);
+                bar.Add(slice);
+            }
+
+            return bar;
+        }
+
         string DescribeOdds(MysteryBoxDefinition box)
         {
             string odds =
@@ -133,7 +166,9 @@ namespace LivingDiorama.UI
             {
                 Save.SavedBox saved = _game.State.Data.BoxState(box.id);
                 int left = Mathf.Max(0, box.pityRareAfter - saved.sinceRare);
-                odds += $"\nGuaranteed Rare within {left} more";
+                odds += left <= 1
+                    ? "\nA Rare is guaranteed in the next box."
+                    : $"\nA Rare is guaranteed within {left} boxes.";
             }
 
             return odds;

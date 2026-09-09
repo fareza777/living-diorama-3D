@@ -213,6 +213,17 @@ namespace LivingDiorama.Core
             volume.profile = profile;
         }
 
+        async System.Threading.Tasks.Task UpgradeSceneryAsync()
+        {
+            var library = new PropLibrary();
+            await library.LoadAsync();
+
+            if (_world == null) return;
+
+            _world.Props = library;
+            _world.RefreshScatter();
+        }
+
         void BuildWorld(SaveData data)
         {
             var worldGo = new GameObject("Diorama");
@@ -237,6 +248,11 @@ namespace LivingDiorama.Core
                                         (_db.biomes.Count > 0 ? _db.biomes[0] : null);
                 _world.BuildTile(new Vector2Int(tile.x, tile.y), biome);
             }
+
+            // The world is up immediately with generated scenery; the modelled trees and
+            // rocks stream in behind it and replace them. Same arrangement as the
+            // creatures and the unboxing chest -- nothing waits on a download.
+            _ = UpgradeSceneryAsync();
 
             if (data.tiles.Count > 0)
             {

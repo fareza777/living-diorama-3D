@@ -268,9 +268,22 @@ namespace LivingDiorama.Diorama
         {
             if (tile.Biome.scatter == null || tile.Biome.scatter.Length == 0) return;
 
+            // Everything the scatter emits hangs off one node, so upgrading to modelled
+            // scenery later is a matter of throwing that node away and running again.
+            Transform previous = tile.Root.transform.Find("Scatter");
+            if (previous != null) Destroy(previous.gameObject);
+
+            var scatterRoot = new GameObject("Scatter");
+            scatterRoot.transform.SetParent(tile.Root.transform, false);
+            tile.Obstacles.Clear();
+
             var solid = new List<CombineInstance>(128);
             var windSwept = new List<CombineInstance>(128);
             var placed = new List<Vector3>(128);
+
+            // One bucket per modelled kind: a combined mesh has a single material, and
+            // each model carries its own texture.
+            var modelled = new Dictionary<BiomeDefinition.PropKind, List<CombineInstance>>(4);
 
             Vector3 origin = TileOrigin(tile.Coord);
             float waterWidth = tile.Biome.hasWater ? _tileSize * 0.28f : 0f;
@@ -310,7 +323,9 @@ namespace LivingDiorama.Diorama
                     placed.Add(local);
 
                     int propSeed = layerSeed + i * 131;
-                    Mesh mesh = BuildProp(entry, propSeed);
+
+                    bool isModel = Props != null && Props.Has(entry.kind);
+                    Mesh mesh = isModel ? Props.Mesh(entry.kind) : BuildProp(entry, propSeed);
                     if (mesh == null) continue;
 
                     float scale = Mathf.Lerp(
@@ -332,12 +347,32 @@ namespace LivingDiorama.Diorama
                         transform = Matrix4x4.TRS(local, Quaternion.Euler(0f, yaw, 0f), Vector3.one * scale),
                     };
 
-                    (entry.windSwept ? windSwept : solid).Add(ci);
+                    if (isModel)
+                    {
+                        if (!modelled.TryGetValue(entry.kind, out List<CombineInstance> bucket))
+                        {
+                            bucket = new List<CombineInstance>(64);
+                            modelled[entry.kind] = bucket;
+                        }
+                        bucket.Add(ci);
+                    }
+                    else
+                    {
+                        (entry.windSwept ? windSwept : solid).Add(ci);
+                    }
                 }
             }
 
-            EmitCombined(tile, solid, "Props", _propMaterial, true);
-            EmitCombined(tile, windSwept, "Foliage", _foliageMaterial, false);
+            EmitCombined(scatterRoot.transform, solid, "Props", _propMaterial, true, true);
+            EmitCombined(scatterRoot.transform, windSwept, "Foliage", _foliageMaterial, false, true);
+
+            foreach (KeyValuePair<BiomeDefinition.PropKind, List<CombineInstance>> kv in modelled)
+            {
+                // The library's meshes are shared between every instance and every tile,
+                // so this path must not destroy its sources the way the generated one does.
+                EmitCombined(scatterRoot.transform, kv.Value, kv.Key.ToString(),
+                             ModelledMaterial(kv.Key), true, disposeSources: false);
+            }
         }
 
         /// <summary>How wide a prop is at knee height, which is all a walking creature
@@ -404,6 +439,36 @@ namespace LivingDiorama.Diorama
             return false;
         }
 
+        /// <summary>Re-dress every tile, after modelled scenery has finished loading.</summary>
+        public void RefreshScatter()
+        {
+            foreach (KeyValuePair<Vector2Int, DioramaTile> kv in _tiles) BuildScatter(kv.Value);
+        }
+
+        /// <summary>Modelled scenery, if any was loaded. Null means everything falls back
+        /// to the generated meshes.</summary>
+        public PropLibrary Props { get; set; }
+
+        readonly Dictionary<BiomeDefinition.PropKind, Material> _modelledMaterials = new(8);
+
+        Material ModelledMaterial(BiomeDefinition.PropKind kind)
+        {
+            if (_modelledMaterials.TryGetValue(kind, out Material cached) && cached != null) return cached;
+
+            // The creature shader, because it is the one that reads a base map. The ground
+            // shader takes its albedo from vertex colours, which a modelled prop has none
+            // of -- that is what made the unboxing chest render black the first time.
+            var material = new Material(Shader.Find("Living Diorama/Creature")) { name = $"Prop_{kind}" };
+
+            Texture texture = Props?.Texture(kind);
+            if (texture != null) material.SetTexture(BaseMapId, texture);
+
+            _modelledMaterials[kind] = material;
+            return material;
+        }
+
+        static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
+
         static Mesh BuildProp(BiomeDefinition.ScatterEntry entry, int seed) => entry.kind switch
         {
             BiomeDefinition.PropKind.PineTree => ProceduralMeshes.PineTree(seed, entry.secondary, entry.primary),
@@ -416,18 +481,18 @@ namespace LivingDiorama.Diorama
             _ => null,
         };
 
-        void EmitCombined(DioramaTile tile, List<CombineInstance> parts, string name,
-                          Material material, bool castShadows)
+        void EmitCombined(Transform parent, List<CombineInstance> parts, string name,
+                          Material material, bool castShadows, bool disposeSources)
         {
             if (parts.Count == 0) return;
 
-            var mesh = new Mesh { name = $"{name}_{tile.Coord.x}_{tile.Coord.y}" };
+            var mesh = new Mesh { name = name };
             mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             mesh.CombineMeshes(parts.ToArray(), true, true);
             mesh.RecalculateBounds();
 
             var go = new GameObject(name);
-            go.transform.SetParent(tile.Root.transform, false);
+            go.transform.SetParent(parent, false);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
 
             var mr = go.AddComponent<MeshRenderer>();
@@ -436,8 +501,12 @@ namespace LivingDiorama.Diorama
                 ? UnityEngine.Rendering.ShadowCastingMode.On
                 : UnityEngine.Rendering.ShadowCastingMode.Off;
 
-            // The source meshes were only ever scratch data for the combine.
-            for (int i = 0; i < parts.Count; i++) Destroy(parts[i].mesh);
+            // Generated meshes were only ever scratch data for the combine; modelled ones
+            // belong to the library and are reused by every other tile.
+            if (disposeSources)
+            {
+                for (int i = 0; i < parts.Count; i++) Destroy(parts[i].mesh);
+            }
             parts.Clear();
         }
 
