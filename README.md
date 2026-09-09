@@ -8,7 +8,7 @@ The knight notices the theft. The slime, oblivious, plays in the river. The skel
 sleeps through all of it and gets up at dusk. Everything you see happening was decided by
 the creatures, not scripted for you.
 
-Android, 3D, fully offline. No account, no backend, no network calls at runtime -- a
+Android, 3D, fully offline. No account, no backend, no network calls at runtime — a
 build post-processor strips the INTERNET permission from the manifest, so the install
 screen agrees.
 
@@ -80,6 +80,12 @@ re-skinned onto the shared stylised shader, and animated procedurally — so a b
 mesh with no skeleton and no clips walks, hops, breathes, eats and recoils on arrival.
 `Tools/meshy_pipeline.py` generates step 1 from a text prompt if you want one.
 
+A creature can then be *upgraded* to real skeletal animation without touching any code
+either: run `Tools/meshy_rig_pipeline.py`, and if the model rigs cleanly the importer
+picks up the clips and the creature switches over. If it does not rig — and some models
+genuinely do not — it keeps the procedural animator and nothing breaks. Both paths are
+first class; the game does not care which one a given creature is using.
+
 ## Presentation
 
 - **Everything is generated.** Terrain, soil strata, the display plinth, trees, rocks,
@@ -95,6 +101,10 @@ mesh with no skeleton and no clips walks, hops, breathes, eats and recoils on ar
   shakes three times with the seam glowing brighter each time, the lid is flung off in a
   burst of light and sparks, and the creature rises out of it and materialises. Rarity
   drives the colour, the light, the spark count and the length of the hold.
+- **Real animation where the rig allows it.** Rigged creatures play authored clips —
+  walk, run, sneak, eat, sleep, attack, take a hit, go down, celebrate — driven straight
+  off the behaviour the brain has selected. Unrigged ones fall back to the procedural
+  gait, which reads the same needs and produces the same silhouette of movement.
 - **Narrated.** A storyteller introduces the world, walks you through the first five
   minutes, and occasionally remarks on what your creatures have got up to. Subtitled,
   and every line ducks the ambience underneath it.
@@ -142,9 +152,30 @@ Unity.exe -batchmode -projectPath . -cameraOnly \
 
 Shots land in `Screenshots/`, each logged with a line reporting how many creatures exist,
 how many models actually loaded, the world clock and what every creature is currently
-doing -- so a blank frame can be told apart from an empty world. Pass `-uiOnly` to
+doing — so a blank frame can be told apart from an empty world. Pass `-uiOnly` to
 photograph the interface layer instead. Batch mode composites the two layers unreliably,
 so capture one at a time.
+
+### Playthrough
+
+The strongest of the three. It drives the actual interface — the same buttons a player
+taps — through nineteen steps: build the world, cross the title screen, run and skip the
+onboarding, open the box screen, buy a box, sit through the unboxing, dismiss the reward,
+open the collection, expand the diorama, claim a tile, open settings, tap a creature,
+confirm the behaviours are actually running, and round-trip a save.
+
+```bash
+Unity.exe -batchmode -projectPath . -executeMethod LivingDiorama.EditorTools.PlaythroughTest.Run
+```
+
+Any error logged anywhere in the engine during those nineteen steps fails the run. This
+is what catches the class of bug that unit tests cannot see and a screenshot does not
+prove — a panel that opens but never closes, a reward that never arrives, a save that
+loses a creature.
+
+Note that none of the above — not the tests, not the screenshots, not the playthrough —
+would have caught the shader stripping that shipped an all-black world to the first APK.
+Only installing the build did. Verify on a device.
 
 ## Asset pipelines
 
@@ -157,9 +188,22 @@ network**.
 | `Tools/meshy_pipeline.py` | Creature meshes from text prompts (Meshy) |
 | `Tools/elevenlabs_pipeline.py` | Narration, sound effects, biome ambience (ElevenLabs) |
 | `Tools/replicate_ui_pipeline.py` | Interface icons, panel and button plates, emblem (Replicate) |
+| `Tools/meshy_rig_pipeline.py` | Skeletons and animation clips for a creature (Meshy) |
+| `Tools/extract_glb_textures.py` | Pulls the albedo out of a GLB, because rigged FBX exports arrive untextured |
+| `Tools/fetch_fonts.py` | The two typefaces, from Google Fonts (SIL OFL) |
 
 Each is resumable and skips anything already on disk, so re-running never re-spends
 credits.
+
+The animation FBXs those pipelines download are **not** committed: each is a seven
+megabyte copy of the whole creature carrying one clip. The extracted `.anim` files under
+`Assets/Data/Animations/` are, and the importer builds its controllers from those, so a
+fresh clone animates correctly without re-running anything.
+
+The animation FBXs those pipelines download are **not** committed: each is a seven
+megabyte copy of the whole creature carrying one clip. The extracted `.anim` files under
+`Assets/Data/Animations/` are, and the importer builds its controllers from those, so a
+fresh clone animates correctly without re-running anything.
 
 ## Ads
 

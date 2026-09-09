@@ -93,6 +93,19 @@ namespace LivingDiorama.EditorTools
                 if (extracted != null) clips[name] = extracted;
             }
 
+            // The extracted clips are the shipped asset; the carrier FBXs are only their
+            // source and are not kept in version control, because each one drags a whole
+            // seven megabyte copy of the model with it. A clone therefore has the clips
+            // but not the files they came out of, and must still get a full controller.
+            foreach (string existing in Directory.GetFiles(outDir, "*.anim"))
+            {
+                string name = Path.GetFileNameWithoutExtension(existing);
+                if (clips.ContainsKey(name)) continue;
+
+                var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(existing.Replace(Path.DirectorySeparatorChar, '/'));
+                if (clip != null) clips[name] = clip;
+            }
+
             if (clips.Count == 0)
             {
                 Debug.LogWarning($"[AnimationImporter] {creature}: no clips could be extracted");

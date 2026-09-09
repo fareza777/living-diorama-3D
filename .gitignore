@@ -58,6 +58,13 @@ crashlytics-build.properties
 Thumbs.db
 desktop.ini
 
+# Animation carrier FBXs. Each is a full seven-megabyte copy of the creature that
+# exists only so a clip can be extracted out of it; the extracted .anim files under
+# Assets/Data/Animations are what the game actually uses and those are committed.
+# The one kept per creature is the rig the clips bind to.
+Assets/Art/Creatures/*/Animations/*.fbx
+!Assets/Art/Creatures/*/Animations/*@idle.fbx
+
 # --- Python tooling ----------------------------------------------------------
 __pycache__/
 *.pyc
