@@ -352,7 +352,14 @@ namespace LivingDiorama.Simulation
                 Velocity *= 0.3f;
             }
 
-            if (surface != null) next.y = surface.SampleHeight(next) + Definition.groundOffset;
+            if (surface != null)
+            {
+                // Walk around the trees rather than through them, then settle onto the
+                // ground at wherever that leaves us.
+                next = surface.ResolveObstacles(next, Definition.bodyRadius);
+                next.y = surface.SampleHeight(next) + Definition.groundOffset;
+            }
+
             transform.position = next;
 
             Vector3 planar = new(Velocity.x, 0f, Velocity.z);

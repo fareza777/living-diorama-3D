@@ -39,6 +39,7 @@ namespace LivingDiorama.UI
 
         VisualElement _toasts, _floaters, _modalLayer, _flash;
         VisualElement _subtitleBand;
+        IVisualElementScheduledItem _subtitleHide;
         Label _subtitleText;
 
         VisualElement _revealLayer, _revealCard;
@@ -537,6 +538,15 @@ namespace LivingDiorama.UI
             if (!SettingsPanel.SubtitlesEnabled || string.IsNullOrEmpty(text)) return;
 
             if (_subtitleRoutine != null) StopCoroutine(_subtitleRoutine);
+
+            // Cancel the previous line's fade-out.
+            //
+            // Hiding was scheduled on the element and never cancelled, so the tail of the
+            // line that just ended landed a fraction of a second into the line that had
+            // just begun and hid it immediately. The opening narration played all three
+            // lines and only ever showed the first.
+            _subtitleHide?.Pause();
+
             _subtitleText.text = text;
             _subtitleBand.RemoveFromClassList("hidden");
             _subtitleBand.RemoveFromClassList("subtitle--fading");
@@ -552,7 +562,11 @@ namespace LivingDiorama.UI
         void HideSubtitle()
         {
             _subtitleBand.AddToClassList("subtitle--fading");
-            _subtitleBand.schedule.Execute(() => _subtitleBand.AddToClassList("hidden")).ExecuteLater(320);
+
+            _subtitleHide?.Pause();
+            _subtitleHide = _subtitleBand.schedule
+                .Execute(() => _subtitleBand.AddToClassList("hidden"));
+            _subtitleHide.ExecuteLater(320);
         }
 
         // ---- toasts and floaters ---------------------------------------------

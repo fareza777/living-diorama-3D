@@ -30,5 +30,9 @@ namespace LivingDiorama.Simulation
 
         /// <summary>Biome governing the tile under a position. Null outside the diorama.</summary>
         Data.BiomeDefinition BiomeAt(Vector3 world);
+
+        /// <summary>Push a position out of any solid scenery it overlaps. Worlds without
+        /// scenery -- the flat stub the brain is tested against -- leave it alone.</summary>
+        Vector3 ResolveObstacles(Vector3 world, float radius) => world;
     }
 }

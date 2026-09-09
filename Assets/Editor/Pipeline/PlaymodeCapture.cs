@@ -309,7 +309,15 @@ namespace LivingDiorama.EditorTools
                 if (lowest > float.MaxValue * 0.5f) continue;
 
                 float ground = sim.Surface.SampleHeight(agent.transform.position);
-                parts.Add($"{agent.Definition.id} {(lowest - ground):+0.00;-0.00}");
+
+                // How far the scenery had to push this creature back out of itself. A
+                // number here every frame means it is standing inside a tree.
+                Vector3 resolved = sim.Surface.ResolveObstacles(
+                    agent.transform.position, agent.Definition.bodyRadius);
+                float intrusion = (resolved - agent.transform.position).magnitude;
+
+                string tail = intrusion > 0.005f ? $" in-prop {intrusion:0.00}" : "";
+                parts.Add($"{agent.Definition.id} {(lowest - ground):+0.00;-0.00}{tail}");
             }
 
             return parts.Count == 0 ? "" : $", clearance [{string.Join(", ", parts)}]";

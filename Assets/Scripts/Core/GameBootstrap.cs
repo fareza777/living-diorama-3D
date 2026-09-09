@@ -104,7 +104,7 @@ namespace LivingDiorama.Core
             yield return null;
 
             SpawnSavedCreatures();
-            _camera.Frame(_world.WorldBounds, true);
+            _camera.Frame(_world.FramingBounds, true);
 
             // The world runs behind the title screen but the clock and the economy hold
             // still until the player has actually stepped in.
@@ -337,7 +337,7 @@ namespace LivingDiorama.Core
 
         void OnTileBuilt(Diorama.DioramaTile tile)
         {
-            _camera.Frame(_world.WorldBounds);
+            _camera.Frame(_world.FramingBounds);
             _audio.PlaySfx("expand_tile", 0.9f);
         }
 

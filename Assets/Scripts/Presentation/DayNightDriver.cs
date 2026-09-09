@@ -131,17 +131,27 @@ namespace LivingDiorama.Presentation
             (0.82f, new Color(0.66f, 0.50f, 0.72f)),   // dusk
             (1.00f, new Color(0.42f, 0.50f, 0.86f)));
 
+        /// <summary>
+        /// Ambient light through the day.
+        ///
+        /// These used to be much brighter. Trilight ambient is added to every surface
+        /// regardless of facing, so a strong pale blue sky term at noon lifted the whole
+        /// world towards white: measured against the palette, on-screen saturation came
+        /// out at a third of what was authored, and the diorama read as washed out. Held
+        /// lower, the warm directional sun does most of the lighting, shading keeps its
+        /// contrast, and the greens are the greens that were painted.
+        /// </summary>
         static Gradient BuildDefaultSkyGradient() => Build(
-            (0.00f, new Color(0.10f, 0.13f, 0.26f)),
-            (0.27f, new Color(0.36f, 0.34f, 0.46f)),
-            (0.50f, new Color(0.55f, 0.68f, 0.86f)),
-            (0.78f, new Color(0.44f, 0.38f, 0.50f)),
-            (1.00f, new Color(0.10f, 0.13f, 0.26f)));
+            (0.00f, new Color(0.07f, 0.09f, 0.19f)),
+            (0.27f, new Color(0.24f, 0.23f, 0.32f)),
+            (0.50f, new Color(0.31f, 0.38f, 0.50f)),
+            (0.78f, new Color(0.29f, 0.25f, 0.34f)),
+            (1.00f, new Color(0.07f, 0.09f, 0.19f)));
 
         static Gradient BuildDefaultGroundGradient() => Build(
-            (0.00f, new Color(0.06f, 0.07f, 0.13f)),
-            (0.50f, new Color(0.30f, 0.29f, 0.24f)),
-            (1.00f, new Color(0.06f, 0.07f, 0.13f)));
+            (0.00f, new Color(0.04f, 0.05f, 0.09f)),
+            (0.50f, new Color(0.24f, 0.21f, 0.16f)),
+            (1.00f, new Color(0.04f, 0.05f, 0.09f)));
 
         static Gradient BuildDefaultFogGradient() => Build(
             (0.00f, new Color(0.07f, 0.09f, 0.18f)),

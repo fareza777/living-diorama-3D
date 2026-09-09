@@ -67,7 +67,13 @@ namespace LivingDiorama.Simulation
 
             var go = new GameObject($"Creature_{definition.id}_{instanceId}");
             go.transform.SetParent(transform, false);
-            position.y = Surface != null ? Surface.SampleHeight(position) + definition.groundOffset : position.y;
+            if (Surface != null)
+            {
+                // Do not put anyone down inside a tree; a creature that starts overlapping
+                // the scenery stands in it until it happens to walk out.
+                position = Surface.ResolveObstacles(position, definition.bodyRadius);
+                position.y = Surface.SampleHeight(position) + definition.groundOffset;
+            }
             go.transform.position = position;
             go.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 

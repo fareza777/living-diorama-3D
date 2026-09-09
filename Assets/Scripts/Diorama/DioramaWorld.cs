@@ -12,6 +12,11 @@ namespace LivingDiorama.Diorama
         public BiomeDefinition Biome;
         public GameObject Root;
         public readonly List<FoodNode> Food = new(4);
+
+        /// <summary>Trunks and boulders creatures have to walk around, as world-space
+        /// XZ centres with a radius. Foliage is not in here: pushing out of every blade
+        /// of grass would cost more than it is worth and look worse.</summary>
+        public readonly List<Vector3> Obstacles = new(64);
     }
 
     /// <summary>
@@ -118,6 +123,31 @@ namespace LivingDiorama.Diorama
                 }
             }
             return results;
+        }
+
+        /// <summary>
+        /// What the camera should frame: the land and its soil slab, without the stand.
+        ///
+        /// WorldBounds includes the plinth hanging below, and aiming at the middle of that
+        /// puts the terrain -- the part worth looking at -- noticeably above the centre of
+        /// the screen with a wall of sky over it. The stand is framing, not subject; it is
+        /// allowed to sit low in the shot.
+        /// </summary>
+        public Bounds FramingBounds
+        {
+            get
+            {
+                Bounds bounds = WorldBounds;
+                float top = 0f;
+                float bottom = SlabBottom;
+
+                var min = new Vector3(bounds.min.x, bottom, bounds.min.z);
+                var max = new Vector3(bounds.max.x, top, bounds.max.z);
+
+                var framing = new Bounds();
+                framing.SetMinMax(min, max);
+                return framing;
+            }
         }
 
         public Bounds WorldBounds
@@ -240,9 +270,16 @@ namespace LivingDiorama.Diorama
                     var local = new Vector3(u * _tileSize, 0f, v * _tileSize);
                     Vector3 world = origin + local;
 
-                    if (waterWidth > 0.01f && !entry.allowInWater)
+                    // Keep dry-land props out of the river.
+                    //
+                    // The old test asked the basin function whether this was "river-ish",
+                    // which is not the same question as whether the ground here is under
+                    // water -- so trees grew along the bank and then stood waist deep in
+                    // the stream. Comparing the ground against the waterline is the actual
+                    // question, and it is the same surface the water plane is drawn at.
+                    if (tile.Biome.hasWater && !entry.allowInWater)
                     {
-                        if (TerrainNoise.WaterBasin(world.x, world.z, _seed, waterWidth) > 0.12f) continue;
+                        if (SampleHeight(world) < tile.Biome.waterLevel + 0.04f) continue;
                     }
 
                     if (TooClose(placed, local, entry.minSpacing)) continue;
@@ -259,6 +296,12 @@ namespace LivingDiorama.Diorama
                         Mathf.Max(0.05f, entry.scaleRange.y),
                         TerrainNoise.Hash(i * 4.4f, layer * 7.7f, layerSeed + 41));
 
+                    float blocking = BlockingRadius(entry.kind) * scale;
+                    if (blocking > 0f)
+                    {
+                        tile.Obstacles.Add(new Vector3(world.x, blocking, world.z));
+                    }
+
                     float yaw = TerrainNoise.Hash(i * 6.1f, layer * 2.2f, layerSeed + 83) * 360f;
 
                     var ci = new CombineInstance
@@ -273,6 +316,57 @@ namespace LivingDiorama.Diorama
 
             EmitCombined(tile, solid, "Props", _propMaterial, true);
             EmitCombined(tile, windSwept, "Foliage", _foliageMaterial, false);
+        }
+
+        /// <summary>How wide a prop is at knee height, which is all a walking creature
+        /// cares about. A pine is a trunk, not a canopy: blocking the whole crown would
+        /// have creatures swerving around thin air.</summary>
+        static float BlockingRadius(BiomeDefinition.PropKind kind) => kind switch
+        {
+            BiomeDefinition.PropKind.PineTree => 0.15f,
+            BiomeDefinition.PropKind.BroadleafTree => 0.17f,
+            BiomeDefinition.PropKind.Rock => 0.34f,
+            BiomeDefinition.PropKind.Crystal => 0.22f,
+            _ => 0f,
+        };
+
+        /// <summary>
+        /// Push a position out of any solid scenery it has walked into.
+        ///
+        /// Creatures used to walk straight through trunks and boulders, which undoes the
+        /// illusion faster than almost anything else: the world stops being a place and
+        /// becomes a picture. Resolving the overlap after the move keeps the steering
+        /// simple -- the brain never has to know the scenery is there.
+        /// </summary>
+        public Vector3 ResolveObstacles(Vector3 world, float radius)
+        {
+            if (!_tiles.TryGetValue(CoordAt(world), out DioramaTile tile)) return world;
+
+            List<Vector3> obstacles = tile.Obstacles;
+            for (int i = 0; i < obstacles.Count; i++)
+            {
+                Vector3 o = obstacles[i];
+                float minimum = o.y + radius;
+
+                float dx = world.x - o.x;
+                float dz = world.z - o.z;
+                float sqr = dx * dx + dz * dz;
+                if (sqr >= minimum * minimum) continue;
+
+                float distance = Mathf.Sqrt(sqr);
+                if (distance < 0.0001f)
+                {
+                    // Dead centre: any direction will do, so pick a stable one.
+                    world.x = o.x + minimum;
+                    continue;
+                }
+
+                float push = (minimum - distance) / distance;
+                world.x += dx * push;
+                world.z += dz * push;
+            }
+
+            return world;
         }
 
         static bool TooClose(List<Vector3> placed, Vector3 candidate, float minSpacing)

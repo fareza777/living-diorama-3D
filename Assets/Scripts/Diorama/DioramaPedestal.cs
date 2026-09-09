@@ -79,6 +79,15 @@ namespace LivingDiorama.Diorama
             // Cap the base so the stand is a closed solid from every angle.
             Cap(b, min, max, footTop, footInset, FootColour);
 
+            // Close the top completely, then lay the visible brass border over it.
+            //
+            // The stand is a hollow frame and its base cap is stepped further in than the
+            // ledge is wide, so along one edge you could see daylight straight through the
+            // diorama -- a six pixel slot of sky between the soil slab and the rail. A
+            // solid top cannot have a gap in it at any camera angle, and the terrain sits
+            // on top of it, so none of it shows except the border.
+            Cap(b, min, max, top - 0.01f, 0f, BodyUpper, faceUp: true);
+
             // Top ledge surface, visible as a thin border around the terrain.
             TopLedge(b, min, max, footprint, top, RimEdge);
 
@@ -127,12 +136,19 @@ namespace LivingDiorama.Diorama
         }
 
         static void Cap(ProceduralMeshes.Builder b, Vector3 min, Vector3 max, float y,
-                        float inset, Color colour)
+                        float inset, Color colour, bool faceUp = false)
         {
             Vector3 a = new(min.x + inset, y, min.z + inset);
             Vector3 c = new(max.x - inset, y, max.z - inset);
             Vector3 bb = new(c.x, y, a.z);
             Vector3 d = new(a.x, y, c.z);
+
+            if (faceUp)
+            {
+                b.AddTriangle(a, c, bb, colour);
+                b.AddTriangle(a, d, c, colour);
+                return;
+            }
 
             // Wound to face down.
             b.AddTriangle(a, bb, c, colour);

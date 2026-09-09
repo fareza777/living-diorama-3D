@@ -191,7 +191,7 @@ namespace LivingDiorama.Presentation
 
             // Only enough margin to keep the corners off the edge. More than this and the
             // diorama shrinks into the middle of a tall screen with nothing around it.
-            float fitDistance = Mathf.Max(fitWidth, fitHeight) * 1.08f;
+            float fitDistance = Mathf.Max(fitWidth, fitHeight) * 1.02f;
             _targetDistance = Mathf.Clamp(fitDistance, _minDistance, _maxDistance);
 
             if (immediate)
