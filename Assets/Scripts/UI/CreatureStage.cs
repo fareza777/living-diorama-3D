@@ -60,10 +60,12 @@ namespace LivingDiorama.UI
 
         void Build()
         {
+            // No MSAA. The pipeline's colour attachment is single sampled, and asking for
+            // two here made every frame of the portrait log a render pass mismatch.
             Texture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32)
             {
                 name = "CreaturePortrait",
-                antiAliasing = 2,
+                antiAliasing = 1,
             };
 
             _pivot = new GameObject("Pivot").transform;

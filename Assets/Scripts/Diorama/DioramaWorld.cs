@@ -333,6 +333,12 @@ namespace LivingDiorama.Diorama
                         Mathf.Max(0.05f, entry.scaleRange.y),
                         TerrainNoise.Hash(i * 4.4f, layer * 7.7f, layerSeed + 41));
 
+                    // Library meshes are normalised to one unit tall, so they have to be
+                    // put back to the size the generated prop would have been. Measuring
+                    // that rather than writing it down means the two cannot drift: a
+                    // mushroom came out as tall as a pine when the scale was assumed.
+                    if (isModel) scale *= NaturalHeight(entry);
+
                     float blocking = BlockingRadius(entry.kind) * scale;
                     if (blocking > 0f)
                     {
@@ -437,6 +443,21 @@ namespace LivingDiorama.Diorama
                 if (d.sqrMagnitude < sqr) return true;
             }
             return false;
+        }
+
+        readonly Dictionary<BiomeDefinition.PropKind, float> _naturalHeight = new(8);
+
+        /// <summary>How tall the generated version of a prop stands, measured once.</summary>
+        float NaturalHeight(BiomeDefinition.ScatterEntry entry)
+        {
+            if (_naturalHeight.TryGetValue(entry.kind, out float cached)) return cached;
+
+            Mesh sample = BuildProp(entry, 4242);
+            float height = sample != null ? Mathf.Max(0.05f, sample.bounds.size.y) : 1f;
+            if (sample != null) Destroy(sample);
+
+            _naturalHeight[entry.kind] = height;
+            return height;
         }
 
         /// <summary>Re-dress every tile, after modelled scenery has finished loading.</summary>
