@@ -627,13 +627,11 @@
     opacity: 0;
 }
 
-/* A soft floor gradient so the buttons sit on something without hiding the diorama. */
+/* A soft floor gradient so the buttons sit on something without hiding the diorama.
+   The ramp itself is a texture built by ScrimTexture and assigned by TitleScreen:
+   UI Toolkit rejects a gradient function here and silently draws nothing. */
 .title__vignette {
-    background-image: linear-gradient(
-        to top,
-        rgba(6, 7, 14, 0.92) 0%,
-        rgba(6, 7, 14, 0.55) 34%,
-        rgba(6, 7, 14, 0.0) 62%);
+    background-size: 100% 100%;
 }
 
 .title__content {
@@ -683,6 +681,12 @@
 
 .subtitle--fading {
     opacity: 0;
+}
+
+/* On the title screen the bottom of the frame belongs to the menu, so the narrator's
+   line moves up over the diorama instead of running through the Begin button. */
+.subtitle--raised {
+    bottom: 64%;
 }
 
 .subtitle__text {

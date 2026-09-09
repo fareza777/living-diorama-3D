@@ -98,9 +98,28 @@ namespace LivingDiorama.EditorTools
             "UnityEditor.PackageManager",
         };
 
+        /// <summary>Warnings that mean an interface element silently did not draw. These
+        /// are only warnings to Unity, but to a player they are a missing panel, so the
+        /// playthrough treats them as failures.</summary>
+        static readonly string[] FatalWarnings =
+        {
+            "Invalid value for image texture",
+            "Unable to load the referenced asset",
+        };
+
         static void OnLog(string message, string stack, LogType type)
         {
-            if (type is not (LogType.Exception or LogType.Error)) return;
+            if (type is LogType.Warning)
+            {
+                bool fatal = false;
+                foreach (string warning in FatalWarnings)
+                {
+                    if (message.Contains(warning)) fatal = true;
+                }
+                if (!fatal) return;
+            }
+            else if (type is not (LogType.Exception or LogType.Error)) return;
+
             if (message.Contains("style slices")) return;
 
             foreach (string frame in IgnoredFrames)

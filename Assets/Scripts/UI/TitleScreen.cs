@@ -18,7 +18,7 @@ namespace LivingDiorama.UI
     /// </summary>
     public sealed class TitleScreen : MonoBehaviour
     {
-        VisualElement _splash, _title, _credits;
+        VisualElement _splash, _title, _credits, _subtitle;
         VisualElement _splashEmblem, _titleEmblem;
         AudioDirector _audio;
 
@@ -51,6 +51,12 @@ namespace LivingDiorama.UI
 
             _splashEmblem.style.backgroundImage = emblem;
             _titleEmblem.style.backgroundImage = emblem;
+
+            root.Q<VisualElement>("title-vignette").style.backgroundImage =
+                new StyleBackground(Background.FromTexture2D(ScrimTexture.Scrim()));
+
+            _subtitle = root.Q<VisualElement>("subtitle-band");
+            _subtitle?.AddToClassList("subtitle--raised");
 
             root.Q<Button>("btn-title-begin").clicked += Begin;
             root.Q<Button>("btn-title-settings").clicked += () =>
@@ -163,6 +169,7 @@ namespace LivingDiorama.UI
 
         IEnumerator Dismiss()
         {
+            _subtitle?.RemoveFromClassList("subtitle--raised");
             _title.AddToClassList("title--gone");
             yield return new WaitForSecondsRealtime(0.75f);
 
