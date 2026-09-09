@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LivingDiorama.Core;
 using LivingDiorama.Data;
 using LivingDiorama.Save;
@@ -29,6 +30,10 @@ namespace LivingDiorama.UI
 
         Vector2 _dragFrom;
         bool _dragging;
+
+        // Pointer id -> where that finger is. Two of them make a pinch.
+        readonly Dictionary<int, Vector2> _touches = new(2);
+        float _pinchFrom;
 
         public VisualElement Root => _root;
 
@@ -67,14 +72,45 @@ namespace LivingDiorama.UI
         {
             _viewport.RegisterCallback<PointerDownEvent>(e =>
             {
-                _dragging = true;
-                _dragFrom = e.position;
+                _touches[e.pointerId] = e.position;
+
+                if (_touches.Count == 1)
+                {
+                    _dragging = true;
+                    _dragFrom = e.position;
+                }
+                else
+                {
+                    // A second finger ends the turn and starts a pinch.
+                    _dragging = false;
+                    _pinchFrom = PinchSpan();
+                }
+
                 _viewport.CapturePointer(e.pointerId);
             });
 
             _viewport.RegisterCallback<PointerMoveEvent>(e =>
             {
-                if (!_dragging || _stage == null) return;
+                if (_stage == null) return;
+
+                if (_touches.ContainsKey(e.pointerId)) _touches[e.pointerId] = e.position;
+
+                if (_touches.Count >= 2)
+                {
+                    // Pinch to zoom.
+                    //
+                    // This was a mouse wheel, which a phone does not have -- so the hint
+                    // under the model invited a gesture that did nothing at all.
+                    float span = PinchSpan();
+                    if (_pinchFrom > 1f && span > 1f)
+                    {
+                        _stage.Zoom = Mathf.Clamp(_stage.Zoom * (span / _pinchFrom), 0.6f, 3.2f);
+                    }
+                    _pinchFrom = span;
+                    return;
+                }
+
+                if (!_dragging) return;
 
                 Vector2 delta = (Vector2)e.position - _dragFrom;
                 _dragFrom = e.position;
@@ -85,15 +121,41 @@ namespace LivingDiorama.UI
 
             _viewport.RegisterCallback<PointerUpEvent>(e =>
             {
+                _touches.Remove(e.pointerId);
                 _dragging = false;
                 _viewport.ReleasePointer(e.pointerId);
             });
 
+            _viewport.RegisterCallback<PointerCancelEvent>(e =>
+            {
+                _touches.Remove(e.pointerId);
+                _dragging = false;
+            });
+
+            // Kept for the editor and anything with a wheel.
             _viewport.RegisterCallback<WheelEvent>(e =>
             {
                 if (_stage == null) return;
-                _stage.Zoom = Mathf.Clamp(_stage.Zoom - e.delta.y * 0.06f, 0.6f, 2.4f);
+                _stage.Zoom = Mathf.Clamp(_stage.Zoom - e.delta.y * 0.06f, 0.6f, 3.2f);
             });
+        }
+
+        /// <summary>Distance between the first two fingers on the viewport.</summary>
+        float PinchSpan()
+        {
+            if (_touches.Count < 2) return 0f;
+
+            Vector2 a = default, b = default;
+            int n = 0;
+            foreach (KeyValuePair<int, Vector2> touch in _touches)
+            {
+                if (n == 0) a = touch.Value;
+                else if (n == 1) b = touch.Value;
+                else break;
+                n++;
+            }
+
+            return Vector2.Distance(a, b);
         }
 
         /// <summary>Called every frame while the collection is open.</summary>

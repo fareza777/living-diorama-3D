@@ -122,7 +122,8 @@ namespace LivingDiorama.Presentation
 
             // Pop in with a slight overshoot, then settle and bob gently.
             float overshoot = 1f + Mathf.Sin(Mathf.Clamp01(_visible) * Mathf.PI) * 0.22f;
-            float scale = 0.34f * _visible * overshoot;
+            // Large enough to read at arm's length on a phone.
+            float scale = 0.46f * _visible * overshoot;
             transform.localScale = Vector3.one * scale;
 
             Vector3 p = transform.localPosition;

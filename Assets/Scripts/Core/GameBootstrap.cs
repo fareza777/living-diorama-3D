@@ -222,6 +222,10 @@ namespace LivingDiorama.Core
 
             _world.Props = library;
             _world.RefreshScatter();
+
+            // The modelled trees are taller than what they replaced, so the shot has to
+            // be taken again now that the canopy is known.
+            _camera?.Frame(_world.FramingBounds);
         }
 
         void BuildWorld(SaveData data)

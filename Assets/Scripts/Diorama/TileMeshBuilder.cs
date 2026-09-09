@@ -400,13 +400,18 @@ namespace LivingDiorama.Diorama
             {
                 for (int x = 0; x < res; x++)
                 {
-                    // Keep the cell if any corner is submerged, so the shoreline lands
-                    // just past the water's edge rather than just short of it.
-                    bool wet = Ground(x, z) < biome.waterLevel
-                            || Ground(x + 1, z) < biome.waterLevel
-                            || Ground(x, z + 1) < biome.waterLevel
-                            || Ground(x + 1, z + 1) < biome.waterLevel;
-                    if (!wet) continue;
+                    // Two submerged corners, not one.
+                    //
+                    // Accepting a single wet corner pushed the surface a whole cell past
+                    // the bank wherever the shoreline clipped a corner, which is what left
+                    // water poking out into the grass. Two keeps the sheet inside the
+                    // channel while still reaching the water's edge.
+                    int wet = 0;
+                    if (Ground(x, z) < biome.waterLevel) wet++;
+                    if (Ground(x + 1, z) < biome.waterLevel) wet++;
+                    if (Ground(x, z + 1) < biome.waterLevel) wet++;
+                    if (Ground(x + 1, z + 1) < biome.waterLevel) wet++;
+                    if (wet < 2) continue;
 
                     int i = z * (res + 1) + x;
                     tris.Add(i);

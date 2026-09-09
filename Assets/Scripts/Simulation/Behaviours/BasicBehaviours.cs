@@ -91,6 +91,14 @@ namespace LivingDiorama.Simulation.Behaviours
             // Danger trumps tiredness -- nothing sleeps with a wolf breathing on it.
             if (ctx.Threat != null && ctx.ThreatDistance < ctx.Settings.baseSightRadius * 0.6f) return 0f;
 
+            // Once asleep, stay asleep until actually rested.
+            //
+            // Scoring purely on tiredness meant a creature woke the instant its energy
+            // crossed back over the threshold it had fallen below, dozed off again a few
+            // seconds later, and spent the night flickering between the two. Sleep is not
+            // a thing you do for one second at a time.
+            if (ctx.Self.Current is SleepBehaviour) return ctx.Self.Energy < 0.92f ? 1f : 0f;
+
             float tired = Mathf.Max(0f, (1f - ctx.Self.Energy) - 0.55f) * 2.2f;
             float offCycle = (1f - ctx.Activity) * 0.4f;
             return Mathf.Clamp01(tired + offCycle);
@@ -100,7 +108,7 @@ namespace LivingDiorama.Simulation.Behaviours
         {
             // Sleep a little away from the crowd.
             self.TargetPoint = ctx.Surface.RandomPoint(self.Position, 2f);
-            self.BehaviourTimer = 30f;
+            self.BehaviourTimer = 90f;
             SimEventBus.Publish(new SimEvent(SimEventKind.FellAsleep, self, null,
                 self.Position, ctx.World.Clock.TotalHours));
         }

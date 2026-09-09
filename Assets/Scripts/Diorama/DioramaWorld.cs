@@ -17,6 +17,10 @@ namespace LivingDiorama.Diorama
         /// XZ centres with a radius. Foliage is not in here: pushing out of every blade
         /// of grass would cost more than it is worth and look worse.</summary>
         public readonly List<Vector3> Obstacles = new(64);
+
+        /// <summary>Height of the tallest thing standing on this tile. The camera has to
+        /// frame the trees, not just the ground they are rooted in.</summary>
+        public float CanopyTop;
     }
 
     /// <summary>
@@ -136,7 +140,15 @@ namespace LivingDiorama.Diorama
             get
             {
                 Bounds bounds = WorldBounds;
+
+                // Up to the treetops. Framing to the ground plane cropped the canopies
+                // off the moment the scenery stopped being knee-high.
                 float top = 0f;
+                foreach (KeyValuePair<Vector2Int, DioramaTile> kv in _tiles)
+                {
+                    top = Mathf.Max(top, kv.Value.CanopyTop);
+                }
+
                 float bottom = SlabBottom;
 
                 var min = new Vector3(bounds.min.x, bottom, bounds.min.z);
@@ -276,6 +288,7 @@ namespace LivingDiorama.Diorama
             var scatterRoot = new GameObject("Scatter");
             scatterRoot.transform.SetParent(tile.Root.transform, false);
             tile.Obstacles.Clear();
+            tile.CanopyTop = 0f;
 
             var solid = new List<CombineInstance>(128);
             var windSwept = new List<CombineInstance>(128);
@@ -352,6 +365,8 @@ namespace LivingDiorama.Diorama
                         mesh = mesh,
                         transform = Matrix4x4.TRS(local, Quaternion.Euler(0f, yaw, 0f), Vector3.one * scale),
                     };
+
+                    tile.CanopyTop = Mathf.Max(tile.CanopyTop, local.y + mesh.bounds.size.y * scale);
 
                     if (isModel)
                     {
@@ -481,6 +496,18 @@ namespace LivingDiorama.Diorama
             // of -- that is what made the unboxing chest render black the first time.
             var material = new Material(Shader.Find("Living Diorama/Creature")) { name = $"Prop_{kind}" };
 
+            // Turn the character lighting off.
+            //
+            // The creature shader carries a rim light and a hard specular so a creature
+            // reads against the scenery. Applied to the scenery itself it draws a shiny
+            // white edge around every trunk and boulder, which is the one thing a tree
+            // must not have. Subsurface goes too: leaves are not skin.
+            if (material.HasProperty("_RimStrength")) material.SetFloat("_RimStrength", 0.06f);
+            if (material.HasProperty("_SSSStrength")) material.SetFloat("_SSSStrength", 0f);
+            if (material.HasProperty("_SpecStrength")) material.SetFloat("_SpecStrength", 0f);
+            if (material.HasProperty("_Gloss")) material.SetFloat("_Gloss", 0f);
+            if (material.HasProperty("_Wrap")) material.SetFloat("_Wrap", 0.2f);
+
             Texture texture = Props?.Texture(kind);
             if (texture != null) material.SetTexture(BaseMapId, texture);
 
@@ -608,12 +635,23 @@ namespace LivingDiorama.Diorama
         {
             if (!_tiles.TryGetValue(CoordAt(world), out _)) return false;
 
-            // Keep a small margin so creatures never stand exactly on a tile seam.
+            // Keep a margin at the outside edge of the diorama, but only there.
+            //
+            // The margin used to apply on all four sides of every tile regardless of what
+            // was next to it, which put a two-thirds-of-a-unit strip of illegal ground
+            // along every internal seam: buy a new tile and the creatures cannot reach it,
+            // because there is a wall between the two. An edge with an unlocked neighbour
+            // is ground, not a boundary.
             Vector2Int coord = CoordAt(world);
             Vector3 local = world - TileOrigin(coord);
             const float margin = 0.35f;
-            return local.x >= margin && local.x <= _tileSize - margin &&
-                   local.z >= margin && local.z <= _tileSize - margin;
+
+            if (!_tiles.ContainsKey(coord + Vector2Int.left) && local.x < margin) return false;
+            if (!_tiles.ContainsKey(coord + Vector2Int.right) && local.x > _tileSize - margin) return false;
+            if (!_tiles.ContainsKey(coord + Vector2Int.down) && local.z < margin) return false;
+            if (!_tiles.ContainsKey(coord + Vector2Int.up) && local.z > _tileSize - margin) return false;
+
+            return true;
         }
 
         public Vector3 ClampInside(Vector3 world)

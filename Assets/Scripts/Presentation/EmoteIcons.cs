@@ -58,8 +58,8 @@ namespace LivingDiorama.Presentation
 
                     // Two bands: a dark outline just outside the shape, fill inside.
                     const float aa = 0.035f;
-                    float inside = 1f - Mathf.SmoothStep(0f, aa, d);
-                    float edge = 1f - Mathf.SmoothStep(0.06f, 0.06f + aa, d);
+                    float inside = 1f - Threshold(0f, aa, d);
+                    float edge = 1f - Threshold(0.06f, 0.06f + aa, d);
 
                     Color c = Color.Lerp(outline, fill, inside);
                     c.a = edge;
@@ -70,6 +70,22 @@ namespace LivingDiorama.Presentation
             tex.SetPixels32(pixels);
             tex.Apply(false, true);
             return tex;
+        }
+
+        /// <summary>
+        /// A shader's smoothstep: 0 below the first edge, 1 above the second, eased
+        /// between.
+        ///
+        /// Not Mathf.SmoothStep, which is a different function wearing the same name --
+        /// it eases *between two values* rather than across a threshold, so
+        /// SmoothStep(0, 0.035, d) returns about 0.035 for anything outside the shape
+        /// instead of 1. Every icon came out as a filled, opaque square in its tint
+        /// colour, which is exactly how they looked over the creatures' heads.
+        /// </summary>
+        static float Threshold(float edge0, float edge1, float x)
+        {
+            float t = Mathf.Clamp01((x - edge0) / Mathf.Max(1e-5f, edge1 - edge0));
+            return t * t * (3f - 2f * t);
         }
 
         static float Distance(Mood mood, Vector2 p) => mood switch

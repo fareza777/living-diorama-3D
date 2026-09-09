@@ -44,6 +44,7 @@ namespace LivingDiorama.EditorTools
             (4f, "01_title"),
             (11f, "02_diorama"),
             (18f, "03_creatures"),
+            (21f, "03b_emotes"),
             (26f, "04_turntable"),
             (34f, "05_night"),
         };
@@ -119,6 +120,8 @@ namespace LivingDiorama.EditorTools
 
             if (_next < Schedule.Length && _elapsed >= Schedule[_next].at)
             {
+                if (Schedule[_next].name == "03b_emotes") ForceEmotes();
+
                 RequestCapture(Schedule[_next].name);
                 _next++;
                 return;
@@ -265,6 +268,29 @@ namespace LivingDiorama.EditorTools
 
         /// <summary>A one-line health check printed beside every shot, so a blank image can
         /// be told apart from an empty world.</summary>
+        /// <summary>
+        /// Put a mood over every creature's head.
+        ///
+        /// The bubbles are the one part of the presentation that appears only when the
+        /// simulation feels like it, so nothing automated ever looked at them -- which is
+        /// how they shipped twice showing a blank square. Forcing one gives the shot
+        /// something to photograph.
+        /// </summary>
+        static void ForceEmotes()
+        {
+            var sim = UnityEngine.Object.FindFirstObjectByType<EcosystemSimulation>();
+            if (sim == null) return;
+
+            var moods = new[] { Mood.Social, Mood.Hungry, Mood.Sleepy, Mood.Playful, Mood.Angry };
+            int i = 0;
+
+            foreach (CreatureAgent agent in sim.Agents)
+            {
+                agent.View?.PlayEmote(moods[i % moods.Length]);
+                i++;
+            }
+        }
+
         static string Report()
         {
             var sim = UnityEngine.Object.FindFirstObjectByType<EcosystemSimulation>();

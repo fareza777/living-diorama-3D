@@ -21,6 +21,10 @@ Shader "Living Diorama/Ground"
         [Header(Surface Detail)]
         _DetailScale ("Detail Noise Scale", Range(0.5, 20)) = 6
         _DetailStrength ("Detail Noise Strength", Range(0, 0.4)) = 0.09
+        _GrainScale ("Grain Scale", Range(4, 80)) = 34
+        _GrainStrength ("Grain Strength", Range(0, 0.3)) = 0.07
+        _DryTint ("Dry Grass Tint", Color) = (0.78, 0.74, 0.42, 1)
+        _TintVariation ("Tint Variation", Range(0, 1)) = 0.35
         _MacroScale ("Macro Variation Scale", Range(0.02, 2)) = 0.22
         _MacroStrength ("Macro Variation Strength", Range(0, 0.4)) = 0.12
 
@@ -54,6 +58,10 @@ Shader "Living Diorama/Ground"
             half4 _ShadowTint;
             half  _DetailScale;
             half  _DetailStrength;
+            half  _GrainScale;
+            half  _GrainStrength;
+            half4 _DryTint;
+            half  _TintVariation;
             half  _MacroScale;
             half  _MacroStrength;
             half4 _RimColor;
@@ -131,11 +139,21 @@ Shader "Living Diorama/Ground"
                 half cliff = smoothstep(_CliffStart, _CliffEnd, slope);
                 albedo = lerp(albedo, _CliffColor.rgb, cliff);
 
-                // Two scales of variation break up the flat-shaded look without a texture.
+                // Three scales of variation break up the flat-shaded look without a
+                // texture: broad patches, mid-scale mottling, and a fine grain that only
+                // reads when the camera is close. Brightness alone left the ground looking
+                // like tinted paper, so the broad patches also drag the hue towards a drier
+                // grass colour -- real turf is never one green.
                 half macro = LD_Noise21(IN.positionWS.xz * _MacroScale);
                 half detail = LD_Noise21(IN.positionWS.xz * _DetailScale);
+                half grain = LD_Noise21(IN.positionWS.xz * _GrainScale);
+
+                albedo = lerp(albedo, albedo * _DryTint.rgb * 1.35h,
+                              saturate((macro - 0.35h) * 1.6h) * _TintVariation * (1.0h - cliff));
+
                 albedo *= 1.0h + (macro - 0.5h) * 2.0h * _MacroStrength
-                                + (detail - 0.5h) * 2.0h * _DetailStrength;
+                                + (detail - 0.5h) * 2.0h * _DetailStrength
+                                + (grain - 0.5h) * 2.0h * _GrainStrength;
 
                 float4 shadowCoord = TransformWorldToShadowCoord(IN.positionWS);
                 Light mainLight = GetMainLight(shadowCoord);

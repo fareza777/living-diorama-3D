@@ -24,13 +24,13 @@ namespace LivingDiorama.Diorama
         readonly Dictionary<BiomeDefinition.PropKind, Mesh> _meshes = new(8);
         readonly Dictionary<BiomeDefinition.PropKind, Texture> _textures = new(8);
 
-        static readonly (BiomeDefinition.PropKind Kind, string File)[] Wanted =
+        static readonly (BiomeDefinition.PropKind Kind, string Name)[] Wanted =
         {
-            (BiomeDefinition.PropKind.PineTree, "pine_tree.glb"),
-            (BiomeDefinition.PropKind.BroadleafTree, "broadleaf_tree.glb"),
-            (BiomeDefinition.PropKind.Rock, "rock.glb"),
-            (BiomeDefinition.PropKind.Bush, "bush.glb"),
-            (BiomeDefinition.PropKind.Mushroom, "mushroom.glb"),
+            (BiomeDefinition.PropKind.PineTree, "pine_tree"),
+            (BiomeDefinition.PropKind.BroadleafTree, "broadleaf_tree"),
+            (BiomeDefinition.PropKind.Rock, "rock"),
+            (BiomeDefinition.PropKind.Bush, "bush"),
+            (BiomeDefinition.PropKind.Mushroom, "mushroom"),
         };
 
         public bool Has(BiomeDefinition.PropKind kind) => _meshes.ContainsKey(kind);
@@ -43,9 +43,9 @@ namespace LivingDiorama.Diorama
 
         public async Task LoadAsync()
         {
-            foreach ((BiomeDefinition.PropKind kind, string file) in Wanted)
+            foreach ((BiomeDefinition.PropKind kind, string name) in Wanted)
             {
-                GameObject holder = await GlbProps.LoadAsync(file);
+                GameObject holder = await GlbProps.LoadAsync(name + ".glb");
                 if (holder == null) continue;
 
                 var filter = holder.GetComponentInChildren<MeshFilter>();
@@ -56,13 +56,24 @@ namespace LivingDiorama.Diorama
                     _meshes[kind] = Normalise(filter);
                 }
 
-                if (renderer != null && renderer.sharedMaterial != null)
+                // Prefer the extracted texture.
+                //
+                // Reading the albedo back out of the imported glTF material works in the
+                // editor and comes back empty in a build, where the importer's own
+                // shaders are stripped -- which is exactly how the unboxing chest shipped
+                // as a white box, and how these trees did on the first device install.
+                var extracted = Resources.Load<Texture2D>("Props/" + name + "_albedo");
+                if (extracted != null)
                 {
-                    foreach (string name in new[] { "_BaseMap", "baseColorTexture", "_MainTex" })
+                    _textures[kind] = extracted;
+                }
+                else if (renderer != null && renderer.sharedMaterial != null)
+                {
+                    foreach (string property in new[] { "_BaseMap", "baseColorTexture", "_MainTex" })
                     {
-                        if (!renderer.sharedMaterial.HasProperty(name)) continue;
+                        if (!renderer.sharedMaterial.HasProperty(property)) continue;
 
-                        Texture texture = renderer.sharedMaterial.GetTexture(name);
+                        Texture texture = renderer.sharedMaterial.GetTexture(property);
                         if (texture == null) continue;
 
                         _textures[kind] = texture;

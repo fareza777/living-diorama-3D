@@ -344,10 +344,15 @@ namespace LivingDiorama.Unboxing
                 float eased = 1f - Mathf.Pow(1f - k, 3f);
 
                 model.localPosition = Vector3.Lerp(start, end, eased);
-                // A full turn on the way up, landing back where it started so the creature
-                // ends the shot facing the player rather than at whatever angle the sweep
-                // happened to stop on.
-                model.localRotation = Quaternion.Euler(0f, 180f + eased * 360f, 0f);
+
+                // A full turn on the way up, landing facing the camera.
+                //
+                // This used to end on a fixed 180 degrees, which was described in the
+                // comment as facing the player and is in fact facing directly away from
+                // them: the reveal spent its last beat showing the creature's back. The
+                // angle is taken from where the camera actually is, so it holds however
+                // the shot is framed.
+                model.localRotation = Quaternion.Euler(0f, FacingYaw(model) + eased * 360f, 0f);
 
                 // Materialise a touch ahead of the rise so it is solid before it settles.
                 SetDissolve(Mathf.Clamp01(1f - k * 1.35f));
@@ -355,7 +360,21 @@ namespace LivingDiorama.Unboxing
             }
 
             model.localPosition = end;
+            model.localRotation = Quaternion.Euler(0f, FacingYaw(model), 0f);
             SetDissolve(0f);
+        }
+
+        /// <summary>The yaw that turns a creature to look at the camera.</summary>
+        float FacingYaw(Transform model)
+        {
+            if (_camera == null) return 180f;
+
+            Vector3 toCamera = _camera.transform.position - model.position;
+            toCamera.y = 0f;
+
+            return toCamera.sqrMagnitude < 0.0001f
+                ? 180f
+                : Quaternion.LookRotation(toCamera.normalized).eulerAngles.y;
         }
 
         void SetDissolve(float amount)

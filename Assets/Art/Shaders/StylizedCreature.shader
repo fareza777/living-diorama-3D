@@ -24,13 +24,17 @@ Shader "Living Diorama/Creature"
 
         [Header(Rim)]
         _RimColor ("Rim Colour", Color) = (1, 0.97, 0.88, 1)
-        _RimPower ("Rim Power", Range(0.5, 8)) = 3.2
-        _RimStrength ("Rim Strength", Range(0, 2)) = 0.75
+        _RimPower ("Rim Power", Range(0.5, 8)) = 4.5
+        // Was 0.75, which drew a bright white outline around every creature and made them
+        // all look wet. A rim light should suggest an edge, not trace one.
+        _RimStrength ("Rim Strength", Range(0, 2)) = 0.22
 
         [Header(Specular)]
         _SpecColor2 ("Specular Colour", Color) = (1,1,1,1)
-        _Gloss ("Gloss", Range(1, 128)) = 24
-        _SpecStrength ("Specular Strength", Range(0, 1)) = 0.18
+        _Gloss ("Gloss", Range(1, 128)) = 42
+        // Likewise the highlight: sharper and much weaker, so skin and cloth stop
+        // reading as polished plastic.
+        _SpecStrength ("Specular Strength", Range(0, 1)) = 0.06
 
         [Header(Grounding)]
         _OcclusionHeight ("Contact Darkening Height", Range(0, 1)) = 0.22
