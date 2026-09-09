@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 Tools/.meshy_state.json
+Tools/.meshy_props_state.json
 
 # --- Unity -------------------------------------------------------------------
 [Ll]ibrary/
