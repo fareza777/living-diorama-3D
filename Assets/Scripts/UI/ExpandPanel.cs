@@ -89,6 +89,10 @@ namespace LivingDiorama.UI
             var swatch = new VisualElement();
             swatch.AddToClassList("tile-option__swatch");
             swatch.style.backgroundColor = biome.groundHigh;
+            swatch.style.borderTopColor = biome.groundLow;
+            swatch.style.borderRightColor = biome.groundLow;
+            swatch.style.borderBottomColor = biome.groundLow;
+            swatch.style.borderLeftColor = biome.groundLow;
             option.Add(swatch);
 
             var text = new VisualElement { style = { flexGrow = 1 } };
@@ -107,6 +111,7 @@ namespace LivingDiorama.UI
             option.Add(text);
 
             var actions = new VisualElement { style = { alignItems = Align.FlexEnd } };
+            actions.style.flexShrink = 0;
 
             var price = new Label($"{cost:N0}");
             price.AddToClassList("tile-option__cost");
@@ -115,8 +120,8 @@ namespace LivingDiorama.UI
             var buy = new Button(() => OnBuy(coord, biome)) { text = "Claim" };
             buy.AddToClassList("button");
             buy.AddToClassList(affordable && !levelLocked ? "button--primary" : "button--ghost");
-            buy.style.minHeight = 36;
-            buy.style.fontSize = 13;
+            buy.style.minHeight = 44;
+            buy.style.fontSize = 15;
             buy.style.marginTop = 4;
             buy.SetEnabled(affordable && !levelLocked);
             actions.Add(buy);

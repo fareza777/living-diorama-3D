@@ -36,9 +36,11 @@
             <ui:VisualElement class="spacer" picking-mode="Ignore" />
 
             <ui:VisualElement class="hud__clock column" picking-mode="Ignore">
-                <ui:Label name="clock-label" class="hud__clock-label" text="Day 1 - 07:00" />
-                <ui:Label name="rate-label" class="hud__rate" text="+0 / hr" />
-                <ui:Label name="population-label" class="hud__clock-label" text="0 / 5 creatures" />
+                <ui:VisualElement class="hud__clock-plate column" picking-mode="Ignore">
+                    <ui:Label name="clock-label" class="hud__clock-label" text="Day 1 - 07:00" />
+                    <ui:Label name="rate-label" class="hud__rate" text="+0 / hr" />
+                    <ui:Label name="population-label" class="hud__clock-label" text="0 / 5 creatures" />
+                </ui:VisualElement>
 
                 <ui:VisualElement class="row" style="margin-top: 8px;">
                     <ui:Button name="btn-turntable" class="button button--ghost button--mini" text="SPIN"
@@ -53,12 +55,9 @@
         <ui:VisualElement class="spacer" picking-mode="Ignore" />
 
         <ui:VisualElement class="hud__bottom" picking-mode="Ignore">
-            <ui:Button name="btn-box" class="button button--primary" text="Mystery Box" />
-            <ui:VisualElement style="width: 8px;" picking-mode="Ignore" />
-            <ui:Button name="btn-collection" class="button button--ghost" text="Collection" />
-            <ui:VisualElement style="width: 8px;" picking-mode="Ignore" />
-            <ui:Button name="btn-expand" class="button button--ghost" text="Expand" />
-            <ui:VisualElement class="spacer" picking-mode="Ignore" />
+            <ui:Button name="btn-box" class="button button--primary tray__button" text="Mystery Box" />
+            <ui:Button name="btn-collection" class="button button--ghost tray__button" text="Collection" />
+            <ui:Button name="btn-expand" class="button button--ghost tray__button" text="Expand" />
         </ui:VisualElement>
     </ui:VisualElement>
 
@@ -132,7 +131,7 @@
             <ui:Label name="expand-subtitle" class="modal__subtitle"
                       text="More land means more creatures, and more room for them to get into trouble." />
 
-            <ui:ScrollView name="expand-list" style="max-height: 360px;" />
+            <ui:ScrollView name="expand-list" style="max-height: 380px; margin-bottom: 4px;" />
 
             <ui:Button name="btn-expand-close" class="button button--ghost" text="Close"
                        style="margin-top: 12px;" />

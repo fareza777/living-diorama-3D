@@ -53,7 +53,20 @@ namespace LivingDiorama.UI
 
             var art = new VisualElement();
             art.AddToClassList("box-entry__art");
-            art.style.backgroundColor = box.accentColour;
+            art.style.backgroundColor = new Color(
+                box.accentColour.r * 0.22f, box.accentColour.g * 0.22f, box.accentColour.b * 0.22f, 1f);
+            art.style.borderTopColor = box.accentColour;
+            art.style.borderRightColor = box.accentColour;
+            art.style.borderBottomColor = box.accentColour;
+            art.style.borderLeftColor = box.accentColour;
+
+            // A flat coloured square reads as art that has not arrived yet. The chest
+            // glyph in the box's own colour says "this is a box" at a glance.
+            var glyph = new VisualElement { pickingMode = PickingMode.Ignore };
+            glyph.AddToClassList("box-entry__glyph");
+            UiSkin.ApplyIcon(glyph, "icon_chest");
+            glyph.style.unityBackgroundImageTintColor = box.accentColour;
+            art.Add(glyph);
             entry.Add(art);
 
             var text = new VisualElement { style = { flexGrow = 1 } };
@@ -65,7 +78,11 @@ namespace LivingDiorama.UI
             text.Add(odds);
             entry.Add(text);
 
+            // The price column keeps its natural width; the description beside it wraps
+            // instead. Letting this one shrink cropped the price to "850 Coi...", which
+            // is the one string on the row that has to be read exactly.
             var actions = new VisualElement { style = { alignItems = Align.FlexEnd } };
+            actions.style.flexShrink = 0;
 
             var buy = new Button(() => OnBuy(box))
             {
@@ -73,8 +90,8 @@ namespace LivingDiorama.UI
             };
             buy.AddToClassList("button");
             buy.AddToClassList("button--primary");
-            buy.style.minHeight = 40;
-            buy.style.fontSize = 13;
+            buy.style.minHeight = 46;
+            buy.style.fontSize = 15;
             buy.SetEnabled(_game.CanAffordBox(box));
             actions.Add(buy);
 
@@ -87,8 +104,8 @@ namespace LivingDiorama.UI
                 };
                 free.AddToClassList("button");
                 free.AddToClassList("button--ad");
-                free.style.minHeight = 36;
-                free.style.fontSize = 12;
+                free.style.minHeight = 42;
+                free.style.fontSize = 14;
                 free.style.marginTop = 6;
                 free.SetEnabled(ready);
                 actions.Add(free);

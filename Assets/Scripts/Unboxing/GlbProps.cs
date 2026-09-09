@@ -55,26 +55,43 @@ namespace LivingDiorama.Unboxing
             }
         }
 
-        /// <summary>Move a prop's material onto the stylised shader, keeping its albedo, so
-        /// it lights the same way as everything else on the stage.</summary>
-        public static Material Restyle(Renderer renderer, Shader shader)
+        /// <summary>
+        /// Move a prop's material onto the stylised shader, keeping its albedo, so it
+        /// lights the same way as everything else on the stage.
+        ///
+        /// <paramref name="propName"/> names a texture under Resources/Props, and it is
+        /// tried first for a reason: reading the albedo back out of the imported glTF
+        /// material works in the editor and produces a white prop in a build, where the
+        /// importer's own shaders are stripped and the material comes back bare. The
+        /// extracted texture is a normal asset, so it is always there.
+        /// </summary>
+        public static Material Restyle(Renderer renderer, Shader shader, string propName = null)
         {
             if (shader == null) return null;
 
             var material = new Material(shader) { name = "PropStyled" };
 
+            if (!string.IsNullOrEmpty(propName))
+            {
+                var extracted = Resources.Load<Texture2D>("Props/" + propName + "_albedo");
+                if (extracted != null) material.SetTexture(BaseMapId, extracted);
+            }
+
             Material source = renderer != null ? renderer.sharedMaterial : null;
             if (source != null)
             {
-                foreach (string name in new[] { "_BaseMap", "baseColorTexture", "_MainTex" })
+                if (material.GetTexture(BaseMapId) == null)
                 {
-                    if (!source.HasProperty(name)) continue;
+                    foreach (string name in new[] { "_BaseMap", "baseColorTexture", "_MainTex" })
+                    {
+                        if (!source.HasProperty(name)) continue;
 
-                    Texture texture = source.GetTexture(name);
-                    if (texture == null) continue;
+                        Texture texture = source.GetTexture(name);
+                        if (texture == null) continue;
 
-                    material.SetTexture(BaseMapId, texture);
-                    break;
+                        material.SetTexture(BaseMapId, texture);
+                        break;
+                    }
                 }
 
                 if (source.HasProperty(BaseColorId)) material.SetColor(BaseColorId, source.GetColor(BaseColorId));

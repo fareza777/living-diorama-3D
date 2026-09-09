@@ -108,10 +108,20 @@ namespace LivingDiorama.Diorama
             }
         }
 
+        /// <summary>Top of the slab wall at a point on the tile border.
+        ///
+        /// Where the river reaches the edge the riverbed is below the waterline, so a wall
+        /// that stopped at the ground left the water plane projecting past the slab with
+        /// daylight underneath it -- a blue lip hanging in mid-air. The wall carries on up
+        /// to the surface of the water instead, which is also what the cut face of a real
+        /// diorama looks like: soil holding the water in.</summary>
         static Vector3 Corner(float worldX, float worldZ, in TileContext ctx)
         {
             float y = TerrainNoise.Height(worldX, worldZ, ctx.Seed, ctx.Biome.reliefHeight,
                                           ctx.Biome.reliefScale, ctx.WaterWidth, ctx.Biome.waterLevel);
+
+            if (ctx.WaterWidth > 0.01f) y = Mathf.Max(y, ctx.Biome.waterLevel);
+
             return new Vector3(worldX - ctx.Origin.x, y, worldZ - ctx.Origin.z);
         }
 

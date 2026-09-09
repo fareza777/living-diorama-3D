@@ -59,6 +59,7 @@ namespace LivingDiorama.Unboxing
             if (propMaterial.HasProperty("_CliffStart")) propMaterial.SetFloat("_CliffStart", 1.1f);
             if (propMaterial.HasProperty("_DetailStrength")) propMaterial.SetFloat("_DetailStrength", 0.03f);
 
+            BuildBackdrop(toon);
             BuildPlinth(propMaterial);
             BuildChest(propMaterial, additive);
             BuildBeam(additive);
@@ -127,7 +128,7 @@ namespace LivingDiorama.Unboxing
             if (model == null || _plinth == null || this == null) return;
 
             var renderer = model.GetComponentInChildren<MeshRenderer>();
-            Material material = GlbProps.Restyle(renderer, textured);
+            Material material = GlbProps.Restyle(renderer, textured, "pedestal");
 
             foreach (MeshRenderer r in model.GetComponentsInChildren<MeshRenderer>())
             {
@@ -147,6 +148,102 @@ namespace LivingDiorama.Unboxing
 
             float width = Mathf.Max(bounds.size.x, bounds.size.z);
             if (width > 0.001f) model.transform.localScale = Vector3.one * (1.55f / width);
+        }
+
+        /// <summary>
+        /// A dark enclosure around the stage.
+        ///
+        /// The stage floats well above the world, which meant the chest was presented
+        /// against whatever the sky happened to be doing -- at midday, a lit prop on a
+        /// flat grey field, with none of the theatre the moment is supposed to have. This
+        /// puts it inside a room instead, so the key and rim lights have darkness to
+        /// carve the chest out of.
+        ///
+        /// The sphere is built inside-out and its colour lives in the vertices, because
+        /// the ground shader reads albedo from vertex colour: no new shader means nothing
+        /// new for the build to strip, which is how the world came out black the first
+        /// time it was installed on a phone.
+        /// </summary>
+        void BuildBackdrop(Shader toon)
+        {
+            const int rings = 14;
+            const int segments = 24;
+
+            // Close enough that the scene's exponential fog barely touches it. Far enough
+            // that the beam and the risen creature stay well inside the room.
+            const float radius = 16f;
+
+            var vertices = new System.Collections.Generic.List<Vector3>((rings + 1) * (segments + 1));
+            var normals = new System.Collections.Generic.List<Vector3>(vertices.Capacity);
+            var colours = new System.Collections.Generic.List<Color32>(vertices.Capacity);
+            var triangles = new System.Collections.Generic.List<int>(rings * segments * 12);
+
+            // Near black overhead, a touch of cold blue underfoot, so the room has a
+            // floor without ever being bright enough to compete with the chest.
+            var high = new Color(0.012f, 0.014f, 0.026f);
+            var low = new Color(0.038f, 0.042f, 0.072f);
+
+            for (int r = 0; r <= rings; r++)
+            {
+                float v = r / (float)rings;
+                float phi = v * Mathf.PI;
+
+                for (int seg = 0; seg <= segments; seg++)
+                {
+                    float u = seg / (float)segments;
+                    float theta = u * Mathf.PI * 2f;
+
+                    var direction = new Vector3(
+                        Mathf.Sin(phi) * Mathf.Cos(theta),
+                        Mathf.Cos(phi),
+                        Mathf.Sin(phi) * Mathf.Sin(theta));
+
+                    vertices.Add(direction * radius);
+
+                    // Facing the middle of the room, which is where the camera is.
+                    normals.Add(-direction);
+                    colours.Add(Color.Lerp(high, low, v * v));
+                }
+            }
+
+            for (int r = 0; r < rings; r++)
+            {
+                for (int seg = 0; seg < segments; seg++)
+                {
+                    int a = r * (segments + 1) + seg;
+                    int b = a + segments + 1;
+
+                    // Both windings. The camera sits inside the sphere, so the faces it
+                    // needs are the ones backface culling normally throws away -- and
+                    // guessing which way round that is got it silently invisible once
+                    // already. Seven hundred spare triangles is a cheaper answer than a
+                    // shader that exposes a cull mode.
+                    triangles.Add(a); triangles.Add(b); triangles.Add(a + 1);
+                    triangles.Add(a + 1); triangles.Add(b); triangles.Add(b + 1);
+
+                    triangles.Add(a); triangles.Add(a + 1); triangles.Add(b);
+                    triangles.Add(b); triangles.Add(a + 1); triangles.Add(b + 1);
+                }
+            }
+
+            var mesh = new Mesh { name = "StageBackdrop" };
+            mesh.SetVertices(vertices);
+            mesh.SetNormals(normals);
+            mesh.SetColors(colours);
+            mesh.SetTriangles(triangles, 0);
+
+            var go = new GameObject("Backdrop");
+            go.transform.SetParent(transform, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+            var material = new Material(toon) { name = "BackdropMaterial" };
+            if (material.HasProperty("_EdgeDarken")) material.SetFloat("_EdgeDarken", 0f);
+            if (material.HasProperty("_DetailStrength")) material.SetFloat("_DetailStrength", 0f);
+
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
         }
 
         void BuildPlinth(Material material)
@@ -223,7 +320,7 @@ namespace LivingDiorama.Unboxing
 
             _beamMaterial = new Material(additive) { name = "BeamGlow" };
             _beamMaterial.SetFloat("_UseVertexColor", 0f);
-            _beamMaterial.SetFloat("_SoftFade", 0.30f);
+            _beamMaterial.SetFloat("_SoftFade", 0.55f);
 
             _beamRenderer = go.AddComponent<MeshRenderer>();
             _beamRenderer.sharedMaterial = _beamMaterial;

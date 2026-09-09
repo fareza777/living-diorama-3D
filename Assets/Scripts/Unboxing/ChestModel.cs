@@ -61,7 +61,7 @@ namespace LivingDiorama.Unboxing
             // Bake the hierarchy's transform into the vertices so the split works in one
             // space and the pieces can be re-parented freely afterwards.
             Mesh baked = Bake(filter);
-            Material material = GlbProps.Restyle(renderer, shader);
+            Material material = GlbProps.Restyle(renderer, shader, "chest");
 
             Bounds bounds = baked.bounds;
             float seamY = Mathf.Lerp(bounds.min.y, bounds.max.y, LidSeam);

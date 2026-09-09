@@ -35,7 +35,14 @@ namespace LivingDiorama.Presentation
 
         /// <summary>Looking slightly down at a table-top object, the way you would at a
         /// real diorama on a stand.</summary>
-        const float DefaultPitch = 38f;
+        /// <summary>Resting camera angle.
+        ///
+        /// A phone is tall and narrow and the diorama is wide and flat, which is the worst
+        /// possible match: framed from low down, the slab's cut wall fills the screen and
+        /// the top surface -- where everything actually happens -- is squashed to a
+        /// sliver. Looking further down foreshortens the width, stands the footprint up
+        /// the tall axis of the screen, and puts the creatures in view.</summary>
+        const float DefaultPitch = 50f;
 
         float _yaw = 35f, _targetYaw = 35f;
         float _pitch = 42f, _targetPitch = 42f;
@@ -80,12 +87,28 @@ namespace LivingDiorama.Presentation
 
         public void SetMode(Mode mode)
         {
+            Mode previous = _mode;
             _mode = mode;
+
             if (mode == Mode.Cinematic)
             {
                 _cinematicTime = 0f;
                 _cinematicBaseDistance = _targetDistance;
             }
+            else if (previous == Mode.Cinematic && mode == Mode.Interactive)
+            {
+                // Hand back the resting framing.
+                //
+                // The title screen's orbit drives the pitch down to about seventeen
+                // degrees, which is the right look for a slow presentation move and the
+                // wrong one to play on: from there the slab's cut wall fills the screen
+                // and the surface everything happens on is a sliver. Interactive mode only
+                // changes pitch when the player drags, so whatever the cinematic left
+                // behind simply stayed -- every session began at the title's camera angle
+                // and never recovered.
+                Frame(_bounds);
+            }
+
             _idleTimer = 0f;
         }
 
@@ -141,8 +164,6 @@ namespace LivingDiorama.Presentation
         {
             _bounds = bounds;
 
-            float extent = Mathf.Max(bounds.size.x, bounds.size.z);
-
             // Aim at the middle of the object itself, plinth included. Aiming at ground
             // level puts everything below the horizon line and leaves a third of the
             // screen as empty sky, which is what "hard to find the middle" looks like.
@@ -150,8 +171,27 @@ namespace LivingDiorama.Presentation
             _targetPitch = DefaultPitch;
             _targetYaw = Mathf.Round(_targetYaw / 90f) * 90f + 35f;
 
-            // Fit the extent into the vertical FOV with room for the top and bottom bars.
-            float fitDistance = extent / (2f * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad)) * 1.75f;
+            // Fit both axes, not just the vertical one.
+            //
+            // A phone is tall and narrow, so its horizontal field of view is far smaller
+            // than its vertical one. Fitting only the height put the camera close enough
+            // that the diorama ran off both edges while sky and floor sat empty above and
+            // below it -- the whole subject visible in neither direction.
+            float halfV = _camera.fieldOfView * 0.5f * Mathf.Deg2Rad;
+            float halfH = Mathf.Atan(Mathf.Tan(halfV) * Mathf.Max(_camera.aspect, 0.05f));
+
+            // Seen from an angle the square slab is as wide as its diagonal.
+            float width = new Vector2(bounds.size.x, bounds.size.z).magnitude;
+
+            float pitch = DefaultPitch * Mathf.Deg2Rad;
+            float height = bounds.size.y * Mathf.Cos(pitch) + width * Mathf.Sin(pitch);
+
+            float fitWidth = width * 0.5f / Mathf.Tan(halfH);
+            float fitHeight = height * 0.5f / Mathf.Tan(halfV);
+
+            // Only enough margin to keep the corners off the edge. More than this and the
+            // diorama shrinks into the middle of a tall screen with nothing around it.
+            float fitDistance = Mathf.Max(fitWidth, fitHeight) * 1.08f;
             _targetDistance = Mathf.Clamp(fitDistance, _minDistance, _maxDistance);
 
             if (immediate)

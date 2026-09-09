@@ -276,6 +276,25 @@ namespace LivingDiorama.UI
             _toasts.EnableInClassList("hidden", !visible);
         }
 
+        /// <summary>Android's back button. It closes the top thing on screen rather than
+        /// the application, which is what every other app on the phone does.</summary>
+        void HandleBackButton()
+        {
+            if (!Input.GetKeyDown(KeyCode.Escape)) return;
+
+            if (_revealLayer != null && !_revealLayer.ClassListContains("hidden"))
+            {
+                DismissReveal(false);
+                return;
+            }
+
+            if (_openModals.Count > 0)
+            {
+                Click();
+                CloseModals();
+            }
+        }
+
         void OpenSettings()
         {
             OpenModal(_root.Q<VisualElement>("modal-settings"), _settings.Refresh);
@@ -285,6 +304,8 @@ namespace LivingDiorama.UI
 
         void Update()
         {
+            HandleBackButton();
+
             if (_sim == null || !_gameplayStarted) return;
 
             _clockLabel.text = _sim.Clock.Label;
@@ -381,6 +402,12 @@ namespace LivingDiorama.UI
             _openModals.Add(panel);
 
             _modalLayer.RemoveFromClassList("hidden");
+
+            // The tray is docked at the bottom of the screen, below where a modal card
+            // ends, so it kept sitting there at full brightness beside a dimmed world and
+            // read as part of the dialog. A modal is modal: the HUD stands down.
+            SetHudVisible(false);
+
             _camera.InputBlocked = true;
             _sim.Paused = true;
         }
@@ -392,6 +419,9 @@ namespace LivingDiorama.UI
 
             _modalLayer.AddToClassList("hidden");
             _camera.InputBlocked = false;
+
+            // The unboxing takes the screen next, and it wants the HUD down too.
+            if (!_unboxing.IsRunning) SetHudVisible(true);
 
             // Do not resume the world while a reveal is on screen behind the card.
             if (!_unboxing.IsRunning) _sim.Paused = false;
@@ -413,6 +443,12 @@ namespace LivingDiorama.UI
             CloseModals();
             _sim.Paused = true;
             _camera.InputBlocked = true;
+
+            // The chest gets the whole screen. Leaving the coin chips and the tray up
+            // through the shake and the burst made a cinematic look like a menu with a
+            // box on it; the HUD comes back when the reward is dismissed.
+            SetHudVisible(false);
+
             _unboxing.Play(result);
             _onboarding.NotifyBoxOpened();
         }
@@ -448,7 +484,7 @@ namespace LivingDiorama.UI
             // one thing this screen may never get wrong.
             // The HUD tray sits where the card's buttons land, so it stands down for the
             // reveal. A reward screen should be the only thing on screen.
-            _hud.AddToClassList("hidden");
+            SetHudVisible(false);
 
             _revealLayer.RemoveFromClassList("hidden");
             _revealCard.AddToClassList("reveal-card--in");
@@ -462,7 +498,7 @@ namespace LivingDiorama.UI
             Click();
             _revealCard.RemoveFromClassList("reveal-card--in");
             _revealLayer.AddToClassList("hidden");
-            _hud.RemoveFromClassList("hidden");
+            SetHudVisible(true);
 
             _unboxing.Dismiss();
             _camera.InputBlocked = false;

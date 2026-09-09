@@ -18,8 +18,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-GLB_DIR = ROOT / "Assets" / "StreamingAssets" / "Creatures"
-ART_DIR = ROOT / "Assets" / "Art" / "Creatures"
+# Creature textures sit beside the creature art and are referenced by the Creature
+# asset. Prop textures go into Resources instead: the unboxing props are loaded by
+# name at runtime with no asset to hang a reference on.
+SOURCES = [
+    (ROOT / "Assets" / "StreamingAssets" / "Creatures",
+     ROOT / "Assets" / "Art" / "Creatures", True),
+    (ROOT / "Assets" / "StreamingAssets" / "Props",
+     ROOT / "Assets" / "Resources" / "Props", False),
+]
 
 # GLB chunk types, little-endian ASCII as stored in the header.
 CHUNK_JSON = 0x4E4F534A
@@ -74,7 +81,7 @@ def base_colour_image(gltf: dict) -> int | None:
     return 0 if len(images) == 1 else None
 
 
-def extract(path: Path) -> bool:
+def extract(path: Path, art_dir: Path, in_subfolder: bool) -> bool:
     creature = path.stem
     gltf, binary = read_glb(path)
 
@@ -90,7 +97,7 @@ def extract(path: Path) -> bool:
     data = binary[offset:offset + view["byteLength"]]
 
     suffix = EXTENSIONS.get(image.get("mimeType", ""), ".png")
-    out_dir = ART_DIR / creature
+    out_dir = art_dir / creature if in_subfolder else art_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"{creature}_albedo{suffix}"
     out.write_bytes(data)
@@ -100,17 +107,18 @@ def extract(path: Path) -> bool:
 
 
 def main() -> int:
-    if not GLB_DIR.exists():
-        print(f"no creature glbs at {GLB_DIR}", file=sys.stderr)
-        return 1
-
     extracted = 0
-    for path in sorted(GLB_DIR.glob("*.glb")):
-        try:
-            if extract(path):
-                extracted += 1
-        except Exception as error:  # a bad file must not stop the rest
-            print(f"[fail] {path.name}: {error}")
+    for glb_dir, art_dir, in_subfolder in SOURCES:
+        if not glb_dir.exists():
+            print(f"[skip] nothing at {glb_dir}")
+            continue
+
+        for path in sorted(glb_dir.glob("*.glb")):
+            try:
+                if extract(path, art_dir, in_subfolder):
+                    extracted += 1
+            except Exception as error:  # a bad file must not stop the rest
+                print(f"[fail] {path.name}: {error}")
 
     print(f"{extracted} texture(s) extracted")
     return 0 if extracted else 1

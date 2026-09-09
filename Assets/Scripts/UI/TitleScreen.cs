@@ -52,8 +52,7 @@ namespace LivingDiorama.UI
             _splashEmblem.style.backgroundImage = emblem;
             _titleEmblem.style.backgroundImage = emblem;
 
-            root.Q<VisualElement>("title-vignette").style.backgroundImage =
-                new StyleBackground(Background.FromTexture2D(ScrimTexture.Scrim()));
+            Scrim.Fill(root.Q<VisualElement>("title-vignette"));
 
             _subtitle = root.Q<VisualElement>("subtitle-band");
             _subtitle?.AddToClassList("subtitle--raised");

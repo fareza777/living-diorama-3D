@@ -123,7 +123,7 @@
 }
 
 .modal__title {
-    font-size: 27px;
+    font-size: 30px;
     -unity-font-definition: resource("Fonts/Cinzel-Bold");
     letter-spacing: 1px;
     color: rgb(255, 240, 218);
@@ -131,7 +131,7 @@
 }
 
 .modal__subtitle {
-    font-size: 13px;
+    font-size: 16px;
     color: var(--ink-dim);
     margin-bottom: 14px;
     white-space: normal;
@@ -168,28 +168,51 @@
 .chip__icon--keys { background-color: var(--violet); }
 
 .chip__value {
-    font-size: 16px;
+    font-size: 18px;
     -unity-font-definition: resource("Fonts/Nunito-Bold");
     color: rgb(252, 246, 234);
 }
 
 /* -------------------------------------------------------------------- buttons */
 
+/* Buttons are drawn rather than painted.
+ *
+ * The generated plate art carries an ornament across the middle of the pill, which is
+ * handsome on its own and unreadable the moment a word sits on it -- the label lands on
+ * top of the ornament and neither wins. A button's first job is to say what it does, so
+ * the face is built here instead: a flat brass-edged plate that is exactly symmetrical
+ * at any width, with the text centred in it and nothing behind the text at all. The
+ * painted art is kept for the icon-only buttons, where there is no label to fight. */
 .button {
-    min-height: 48px;
+    min-height: 54px;
     border-radius: var(--radius-sm);
-    border-width: 1px;
-    border-color: var(--stroke-strong);
-    background-color: var(--panel-raised);
-    color: var(--ink);
-    font-size: 15px;
+    border-width: 2px;
+    border-color: rgba(196, 150, 78, 0.85);
+    background-color: rgb(38, 32, 26);
+    color: rgb(247, 238, 220);
+    font-size: 17px;
     -unity-font-definition: resource("Fonts/Nunito-Bold");
+    -unity-text-align: middle-center;
     letter-spacing: 0.5px;
-    padding-left: 20px;
-    padding-right: 20px;
-    flex-shrink: 0;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    flex-shrink: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
     transition-property: background-color, scale;
     transition-duration: 0.12s;
+}
+
+.button:hover {
+    background-color: rgb(52, 43, 33);
+}
+
+.button:active {
+    scale: 0.97 0.97;
+    background-color: rgb(28, 24, 19);
 }
 
 .button:hover { background-color: rgba(46, 52, 76, 0.96); }
@@ -200,9 +223,17 @@
 }
 
 .button--primary {
-    background-color: var(--gold);
-    border-color: rgba(255, 255, 255, 0.4);
-    color: rgb(32, 24, 8);
+    background-color: rgb(120, 74, 26);
+    border-color: rgb(240, 196, 108);
+    color: rgb(255, 244, 222);
+}
+
+.button--primary:hover {
+    background-color: rgb(142, 90, 33);
+}
+
+.button--primary:active {
+    background-color: rgb(96, 58, 20);
 }
 
 .button--primary:hover { background-color: rgb(255, 214, 122); }
@@ -214,8 +245,13 @@
 }
 
 .button--ghost {
-    background-color: rgba(255, 255, 255, 0.04);
-    border-color: var(--stroke);
+    background-color: rgb(30, 28, 34);
+    border-color: rgba(196, 150, 78, 0.45);
+    color: rgb(236, 230, 220);
+}
+
+.button--ghost:hover {
+    background-color: rgb(42, 39, 47);
 }
 
 .button--mini {
@@ -223,7 +259,7 @@
     height: 44px;
     padding-left: 12px;
     padding-right: 12px;
-    font-size: 12px;
+    font-size: 15px;
     letter-spacing: 1px;
 }
 
@@ -234,7 +270,7 @@
     padding-left: 0;
     padding-right: 0;
     border-radius: 16px;
-    font-size: 20px;
+    font-size: 22px;
 }
 
 /* ----------------------------------------------------------------------- HUD */
@@ -250,28 +286,54 @@
     max-width: 46%;
 }
 
+.hud__clock-plate {
+    align-items: flex-end;
+    background-color: rgba(12, 14, 24, 0.86);
+    border-radius: 16px;
+    border-width: 1px;
+    border-color: rgba(214, 168, 92, 0.55);
+    padding: 6px 12px;
+}
+
 .hud__clock-label {
-    font-size: 13px;
-    color: var(--ink-dim);
+    font-size: 16px;
+    color: rgb(226, 231, 242);
     -unity-text-align: middle-right;
     white-space: nowrap;
 }
 
 .hud__rate {
-    font-size: 12px;
+    font-size: 15px;
     color: var(--gold);
 }
 
+/* Three buttons, one row, exact thirds.
+ *
+ * This used to wrap: the buttons were sized by their own text, would not shrink, and had
+ * a growing spacer after them, so on a real phone Expand dropped onto a second line and
+ * hung off the tray. Equal shares of the row cannot do that at any width, and the result
+ * is symmetrical, which the wrapped version never was. */
 .hud__bottom {
     flex-direction: row;
     align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    background-color: rgba(10, 11, 20, 0.55);
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    background-color: rgba(10, 11, 20, 0.82);
     border-radius: 22px;
-    border-top-width: 1px;
-    border-top-color: var(--edge-soft);
+    border-width: 1px;
+    border-color: rgba(196, 150, 78, 0.30);
     padding: 8px;
+}
+
+.tray__button {
+    flex-grow: 1;
+    flex-basis: 0;
+    flex-shrink: 1;
+    margin-left: 4px;
+    margin-right: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+    min-width: 0;
 }
 
 .level {
@@ -286,12 +348,22 @@
 }
 
 .level__label {
-    font-size: 11px;
-    color: var(--ink-dim);
+    font-size: 14px;
+    color: rgb(226, 231, 242);
+}
+
+/* The level bar sat directly on the sky too. */
+.level {
+    background-color: rgba(12, 14, 24, 0.80);
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: rgba(214, 168, 92, 0.38);
+    padding: 6px 10px;
+    margin-top: 6px;
 }
 
 .level__track {
-    height: 8px;
+    height: 12px;
     background-color: var(--panel-sunken);
     border-radius: 4px;
     border-width: 1px;
@@ -301,8 +373,8 @@
 
 .level__fill {
     height: 100%;
-    background-color: var(--violet);
-    border-radius: 3px;
+    background-color: var(--gold);
+    border-radius: 5px;
     width: 0;
     transition-property: width;
     transition-duration: 0.4s;
@@ -313,7 +385,7 @@
 .toasts {
     position: absolute;
     left: 12px;
-    bottom: 92px;
+    bottom: 108px;
     width: 62%;
     max-width: 380px;
 }
@@ -325,7 +397,7 @@
     border-radius: 10px;
     padding: 9px 12px;
     margin-top: 6px;
-    font-size: 13px;
+    font-size: 16px;
     color: var(--ink);
     white-space: normal;
     opacity: 1;
@@ -377,7 +449,7 @@
 }
 
 .card__name {
-    font-size: 12px;
+    font-size: 15px;
     -unity-font-style: bold;
     color: var(--ink);
     -unity-text-align: middle-center;
@@ -385,7 +457,7 @@
 }
 
 .card__count {
-    font-size: 11px;
+    font-size: 14px;
     color: var(--ink-dim);
 }
 
@@ -405,13 +477,13 @@
 }
 
 .inspector__name {
-    font-size: 18px;
+    font-size: 20px;
     -unity-font-style: bold;
     color: var(--ink);
 }
 
 .inspector__species {
-    font-size: 12px;
+    font-size: 15px;
     color: var(--ink-dim);
     margin-bottom: 10px;
 }
@@ -426,7 +498,7 @@
 }
 
 .need__label {
-    font-size: 11px;
+    font-size: 14px;
     color: var(--ink-dim);
 }
 
@@ -467,20 +539,29 @@
 }
 
 .box-entry__art {
-    width: 58px;
-    height: 58px;
-    border-radius: 12px;
+    width: 62px;
+    height: 62px;
+    border-radius: 14px;
+    border-width: 2px;
     margin-right: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.box-entry__glyph {
+    width: 38px;
+    height: 38px;
 }
 
 .box-entry__name {
-    font-size: 16px;
+    font-size: 18px;
     -unity-font-style: bold;
     color: var(--ink);
 }
 
 .box-entry__odds {
-    font-size: 11px;
+    font-size: 14px;
     color: var(--ink-dim);
     white-space: normal;
 }
@@ -493,13 +574,13 @@
 }
 
 .reveal__rarity {
-    font-size: 12px;
+    font-size: 15px;
     -unity-font-definition: resource("Fonts/Nunito-Bold");
     letter-spacing: 4px;
 }
 
 .reveal__name {
-    font-size: 34px;
+    font-size: 36px;
     -unity-font-definition: resource("Fonts/Cinzel-Bold");
     letter-spacing: 1px;
     color: rgb(255, 241, 220);
@@ -507,7 +588,7 @@
 }
 
 .reveal__flavour {
-    font-size: 13px;
+    font-size: 16px;
     color: var(--ink-dim);
     white-space: normal;
     -unity-text-align: middle-center;
@@ -517,7 +598,7 @@
 .reveal__badge {
     background-color: var(--gold);
     color: rgb(30, 22, 6);
-    font-size: 11px;
+    font-size: 14px;
     -unity-font-style: bold;
     border-radius: 999px;
     padding: 3px 10px;
@@ -540,10 +621,12 @@
 .tile-option--locked { opacity: 0.5; }
 
 .tile-option__swatch {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border-width: 2px;
     margin-right: 12px;
+    flex-shrink: 0;
 }
 
 .tile-option__name {
@@ -553,7 +636,7 @@
 }
 
 .tile-option__meta {
-    font-size: 11px;
+    font-size: 14px;
     color: var(--ink-dim);
     white-space: normal;
 }
@@ -599,7 +682,7 @@
 }
 
 .splash__word {
-    font-size: 16px;
+    font-size: 18px;
     -unity-font-definition: resource("Fonts/Cinzel-SemiBold");
     letter-spacing: 11px;
     color: rgba(255, 214, 150, 0.85);
@@ -628,10 +711,11 @@
 }
 
 /* A soft floor gradient so the buttons sit on something without hiding the diorama.
-   The ramp itself is a texture built by ScrimTexture and assigned by TitleScreen:
-   UI Toolkit rejects a gradient function here and silently draws nothing. */
+   The ramp is a stack of plain colour bands filled in by Scrim: UI Toolkit rejects a
+   gradient function here, and a generated texture drew in the editor but not on a
+   phone. See Scrim for why this is deliberately the dullest possible implementation. */
 .title__vignette {
-    background-size: 100% 100%;
+    flex-direction: column;
 }
 
 .title__content {
@@ -645,7 +729,7 @@
 }
 
 .title__name {
-    font-size: 40px;
+    font-size: 42px;
     -unity-font-definition: resource("Fonts/Cinzel-Bold");
     letter-spacing: 10px;
     color: rgb(255, 238, 212);
@@ -653,7 +737,7 @@
 }
 
 .title__tagline {
-    font-size: 13px;
+    font-size: 16px;
     letter-spacing: 3px;
     color: rgba(255, 236, 208, 0.55);
     margin-top: 8px;
@@ -715,10 +799,10 @@
 .reveal-card {
     width: 88%;
     max-width: 460px;
-    background-color: rgba(14, 16, 26, 0.94);
+    background-color: rgb(13, 15, 25);
     border-radius: 24px;
-    border-width: 1px;
-    border-color: var(--stroke-strong);
+    border-width: 2px;
+    border-color: rgba(214, 168, 92, 0.45);
     padding: 20px;
     align-items: center;
     opacity: 0;
@@ -760,7 +844,7 @@
 }
 
 .coach__title {
-    font-size: 11px;
+    font-size: 14px;
     letter-spacing: 4px;
     color: var(--gold);
     -unity-font-definition: resource("Fonts/Nunito-Bold");
@@ -785,7 +869,7 @@
 /* ------------------------------------------------------------------ settings */
 
 .setting__label {
-    font-size: 12px;
+    font-size: 15px;
     letter-spacing: 1px;
     color: var(--ink-dim);
     margin-top: 12px;
@@ -798,7 +882,7 @@
 
 .setting__toggle {
     margin-top: 10px;
-    font-size: 13px;
+    font-size: 16px;
     color: var(--ink);
 }
 
@@ -849,4 +933,34 @@
 
 .unity-scroll-view__content-viewport {
     background-color: rgba(0, 0, 0, 0);
+}
+
+
+/* --------------------------------------------------------------- toggles */
+
+/* Unity's default toggle is a white system checkbox, which on a dark card looks like a
+   piece of the editor left in by accident. This is the same brass-on-ink language as
+   the buttons. */
+.unity-toggle__checkmark {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border-width: 2px;
+    border-color: rgba(196, 150, 78, 0.75);
+    background-color: rgb(24, 22, 28);
+    -unity-background-image-tint-color: rgb(255, 214, 130);
+}
+
+.unity-toggle:hover .unity-toggle__checkmark {
+    border-color: rgb(240, 196, 108);
+}
+
+.unity-toggle > .unity-toggle__input {
+    justify-content: flex-start;
+}
+
+.unity-toggle .unity-label {
+    font-size: 17px;
+    color: var(--ink);
+    min-width: 190px;
 }

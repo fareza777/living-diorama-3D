@@ -111,12 +111,17 @@ namespace LivingDiorama.UI
                 ? button.resolvedStyle.fontSize
                 : 15f;
             label.style.color = button.resolvedStyle.color;
-            label.style.flexShrink = 0;
+
+            // The tray gives each button a third of the screen. The label shrinks into
+            // whatever is left after the icon instead of shouldering it out of the plate.
+            label.style.flexShrink = 1;
+            label.style.overflow = Overflow.Hidden;
+            label.style.whiteSpace = WhiteSpace.NoWrap;
+            label.style.unityTextAlign = TextAnchor.MiddleCenter;
 
             button.style.flexDirection = FlexDirection.Row;
             button.style.alignItems = Align.Center;
             button.style.justifyContent = Justify.Center;
-            button.style.flexShrink = 0;
 
             button.Add(icon);
             button.Add(label);
@@ -140,19 +145,10 @@ namespace LivingDiorama.UI
             // blob; clean dark glass with a bright icon reads better and stays legible at
             // any width the number happens to need.
 
-            foreach (Button button in root.Query<Button>(className: "button--primary").Build())
-            {
-                ApplyPlate(button, "button_primary");
-                // The plate's centre is dark navy under a brass bezel, so the label is
-                // light on dark like everything else rather than dark on gold.
-                button.style.color = new Color(1f, 0.93f, 0.78f);
-            }
-
-            foreach (Button button in root.Query<Button>(className: "button--ghost").Build())
-            {
-                ApplyPlate(button, "button_ghost");
-                button.style.color = new Color(0.97f, 0.94f, 0.88f);
-            }
+            // Text buttons are deliberately not plated. The painted pill carries its
+            // ornament across the middle, exactly where the label goes, so the two draw
+            // on top of each other at every width; the stylesheet draws a symmetrical
+            // brass-edged face instead and the words get the middle to themselves.
 
             SkinCurrencyIcons(root);
         }

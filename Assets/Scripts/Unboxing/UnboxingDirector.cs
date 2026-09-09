@@ -154,7 +154,11 @@ namespace LivingDiorama.Unboxing
             _ => "reveal_common",
         };
 
-        static float RarityBeam(Rarity rarity) => 1.1f + (int)rarity * 0.55f;
+        /// <summary>Beam brightness by rarity. Tuned down hard once the stage got its dark
+        /// room: additive light that merely looked strong against a bright sky saturated
+        /// to a solid white wedge against black, and swallowed the creature rising through
+        /// it. The shaft should light the reveal, not replace it.</summary>
+        static float RarityBeam(Rarity rarity) => 0.40f + (int)rarity * 0.26f;
 
         // ---- beats ----------------------------------------------------------
 
