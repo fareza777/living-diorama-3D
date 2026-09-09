@@ -28,9 +28,27 @@
     --rarity-epic: rgb(190, 132, 255);
     --rarity-legendary: rgb(255, 196, 84);
 
-    --radius: 18px;
-    --radius-sm: 12px;
+    --radius: 20px;
+    --radius-sm: 14px;
     --gap: 10px;
+
+    /* Elevation is expressed as border colour rather than a real shadow, which
+       UI Toolkit does not have; two strengths is enough to read a hierarchy. */
+    --edge-soft: rgba(255, 255, 255, 0.07);
+    --edge-hard: rgba(0, 0, 0, 0.45);
+}
+
+/* Everything inherits the body face; titles opt into the serif. */
+:root {
+    -unity-font-definition: resource("Fonts/Nunito-SemiBold");
+}
+
+.title-face {
+    -unity-font-definition: resource("Fonts/Cinzel-Bold");
+}
+
+.body-bold {
+    -unity-font-definition: resource("Fonts/Nunito-Bold");
 }
 
 /* ---------------------------------------------------------------- structure */
@@ -97,18 +115,19 @@
     width: 92%;
     max-width: 520px;
     max-height: 84%;
-    background-color: var(--panel-raised);
-    border-radius: 24px;
-    border-width: 1px;
-    border-color: var(--stroke-strong);
-    padding: 18px;
+    background-color: rgba(14, 17, 30, 0.97);
+    border-radius: 26px;
+    border-width: 2px;
+    border-color: rgba(214, 168, 92, 0.42);
+    padding: 20px;
 }
 
 .modal__title {
-    font-size: 26px;
-    -unity-font-style: bold;
-    color: var(--ink);
-    margin-bottom: 2px;
+    font-size: 27px;
+    -unity-font-definition: resource("Fonts/Cinzel-Bold");
+    letter-spacing: 1px;
+    color: rgb(255, 240, 218);
+    margin-bottom: 4px;
 }
 
 .modal__subtitle {
@@ -123,23 +142,25 @@
 .chip {
     flex-direction: row;
     align-items: center;
-    background-color: var(--panel);
-    border-radius: 999px;
+    background-color: rgba(12, 14, 24, 0.86);
+    border-radius: 16px;
     border-width: 1px;
-    border-color: var(--stroke);
-    padding-left: 12px;
-    padding-right: 14px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    margin-right: 8px;
+    border-color: rgba(214, 168, 92, 0.55);
+    padding-left: 8px;
+    padding-right: 12px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-right: 7px;
     flex-shrink: 0;
+    min-width: 62px;
 }
 
 .chip__icon {
-    width: 16px;
-    height: 16px;
-    border-radius: 999px;
-    margin-right: 7px;
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    margin-right: 6px;
+    flex-shrink: 0;
 }
 
 .chip__icon--coins { background-color: var(--gold); }
@@ -147,9 +168,9 @@
 .chip__icon--keys { background-color: var(--violet); }
 
 .chip__value {
-    font-size: 15px;
-    -unity-font-style: bold;
-    color: var(--ink);
+    font-size: 16px;
+    -unity-font-definition: resource("Fonts/Nunito-Bold");
+    color: rgb(252, 246, 234);
 }
 
 /* -------------------------------------------------------------------- buttons */
@@ -162,9 +183,10 @@
     background-color: var(--panel-raised);
     color: var(--ink);
     font-size: 15px;
-    -unity-font-style: bold;
-    padding-left: 18px;
-    padding-right: 18px;
+    -unity-font-definition: resource("Fonts/Nunito-Bold");
+    letter-spacing: 0.5px;
+    padding-left: 20px;
+    padding-right: 20px;
     flex-shrink: 0;
     transition-property: background-color, scale;
     transition-duration: 0.12s;
@@ -194,6 +216,15 @@
 .button--ghost {
     background-color: rgba(255, 255, 255, 0.04);
     border-color: var(--stroke);
+}
+
+.button--mini {
+    min-height: 44px;
+    height: 44px;
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 12px;
+    letter-spacing: 1px;
 }
 
 .button--icon {
@@ -233,8 +264,14 @@
 
 .hud__bottom {
     flex-direction: row;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: center;
     flex-wrap: wrap;
+    background-color: rgba(10, 11, 20, 0.55);
+    border-radius: 22px;
+    border-top-width: 1px;
+    border-top-color: var(--edge-soft);
+    padding: 8px;
 }
 
 .level {
@@ -254,16 +291,18 @@
 }
 
 .level__track {
-    height: 6px;
+    height: 8px;
     background-color: var(--panel-sunken);
-    border-radius: 999px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: var(--edge-soft);
     overflow: hidden;
 }
 
 .level__fill {
     height: 100%;
     background-color: var(--violet);
-    border-radius: 999px;
+    border-radius: 3px;
     width: 0;
     transition-property: width;
     transition-duration: 0.4s;
@@ -392,16 +431,16 @@
 }
 
 .need__track {
-    height: 5px;
+    height: 7px;
     background-color: var(--panel-sunken);
-    border-radius: 999px;
+    border-radius: 3px;
     overflow: hidden;
-    margin-top: 3px;
+    margin-top: 4px;
 }
 
 .need__fill {
     height: 100%;
-    border-radius: 999px;
+    border-radius: 3px;
     transition-property: width;
     transition-duration: 0.3s;
 }
@@ -454,16 +493,17 @@
 }
 
 .reveal__rarity {
-    font-size: 13px;
-    -unity-font-style: bold;
-    letter-spacing: 2px;
+    font-size: 12px;
+    -unity-font-definition: resource("Fonts/Nunito-Bold");
+    letter-spacing: 4px;
 }
 
 .reveal__name {
-    font-size: 30px;
-    -unity-font-style: bold;
-    color: var(--ink);
-    margin-top: 2px;
+    font-size: 34px;
+    -unity-font-definition: resource("Fonts/Cinzel-Bold");
+    letter-spacing: 1px;
+    color: rgb(255, 241, 220);
+    margin-top: 4px;
 }
 
 .reveal__flavour {
@@ -559,8 +599,9 @@
 }
 
 .splash__word {
-    font-size: 17px;
-    letter-spacing: 9px;
+    font-size: 16px;
+    -unity-font-definition: resource("Fonts/Cinzel-SemiBold");
+    letter-spacing: 11px;
     color: rgba(255, 214, 150, 0.85);
     margin-top: 18px;
     opacity: 0;
@@ -606,17 +647,19 @@
 }
 
 .title__name {
-    font-size: 34px;
-    -unity-font-style: bold;
-    letter-spacing: 7px;
-    color: rgb(255, 236, 208);
+    font-size: 40px;
+    -unity-font-definition: resource("Fonts/Cinzel-Bold");
+    letter-spacing: 10px;
+    color: rgb(255, 238, 212);
+    margin-top: 4px;
 }
 
 .title__tagline {
     font-size: 13px;
-    letter-spacing: 2px;
-    color: rgba(255, 236, 208, 0.6);
-    margin-top: 4px;
+    letter-spacing: 3px;
+    color: rgba(255, 236, 208, 0.55);
+    margin-top: 8px;
+    -unity-font-definition: resource("Fonts/Nunito-Regular");
 }
 
 .title__credits {
@@ -713,10 +756,10 @@
 }
 
 .coach__title {
-    font-size: 12px;
-    letter-spacing: 3px;
+    font-size: 11px;
+    letter-spacing: 4px;
     color: var(--gold);
-    -unity-font-style: bold;
+    -unity-font-definition: resource("Fonts/Nunito-Bold");
 }
 
 .coach__body {
@@ -760,4 +803,46 @@
 .flash {
     background-color: rgba(255, 255, 255, 0);
     opacity: 0;
+}
+
+
+/* ---------------------------------------------------------------- scrollbars */
+
+.unity-scroller--vertical,
+.unity-scroller--horizontal {
+    width: 8px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+}
+
+.unity-scroller--vertical > .unity-scroller__low-button,
+.unity-scroller--vertical > .unity-scroller__high-button,
+.unity-scroller--horizontal > .unity-scroller__low-button,
+.unity-scroller--horizontal > .unity-scroller__high-button {
+    display: none;
+}
+
+.unity-base-slider--vertical,
+.unity-base-slider--horizontal {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    margin: 0;
+}
+
+.unity-base-slider__tracker {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-width: 0;
+    border-radius: 4px;
+}
+
+.unity-base-slider__dragger {
+    background-color: rgba(214, 168, 92, 0.55);
+    border-width: 0;
+    border-radius: 4px;
+    width: 6px;
+    margin-left: 1px;
+}
+
+.unity-scroll-view__content-viewport {
+    background-color: rgba(0, 0, 0, 0);
 }

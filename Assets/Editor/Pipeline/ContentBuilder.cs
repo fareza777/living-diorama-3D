@@ -112,6 +112,29 @@ namespace LivingDiorama.EditorTools
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
+        /// <summary>The colour map lifted out of the creature's GLB by
+        /// Tools/extract_glb_textures.py. Without it a rigged model renders grey.</summary>
+        static Texture2D LoadAlbedo(string creatureId)
+        {
+            foreach (string extension in new[] { "jpg", "png" })
+            {
+                string path = $"Assets/Art/Creatures/{creatureId}/{creatureId}_albedo.{extension}";
+                if (!File.Exists(path)) continue;
+
+                if (AssetImporter.GetAtPath(path) is TextureImporter importer &&
+                    importer.textureType != TextureImporterType.Default)
+                {
+                    importer.textureType = TextureImporterType.Default;
+                    importer.mipmapEnabled = true;
+                    importer.maxTextureSize = 1024;
+                    importer.SaveAndReimport();
+                }
+
+                return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            }
+            return null;
+        }
+
         static Color Rgb(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f, 1f);
 
         // ---- settings -------------------------------------------------------
@@ -357,6 +380,7 @@ namespace LivingDiorama.EditorTools
             c.rarity = rarity;
             c.flavourText = flavour;
             c.icon = LoadPortrait(id);
+            c.albedo = LoadAlbedo(id);
 
             // Models are loaded from StreamingAssets rather than referenced as prefabs, so
             // a new creature is a file drop plus one asset -- no rebuild, no code.

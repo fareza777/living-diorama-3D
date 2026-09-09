@@ -33,6 +33,10 @@ namespace LivingDiorama.Presentation
         [SerializeField] float _idleDelay = 12f;
         [SerializeField] float _idleOrbitSpeed = 1.6f;
 
+        /// <summary>Looking slightly down at a table-top object, the way you would at a
+        /// real diorama on a stand.</summary>
+        const float DefaultPitch = 38f;
+
         float _yaw = 35f, _targetYaw = 35f;
         float _pitch = 42f, _targetPitch = 42f;
         float _distance = 14f, _targetDistance = 14f;
@@ -124,15 +128,30 @@ namespace LivingDiorama.Presentation
             if (_camera == null) _camera = gameObject.AddComponent<Camera>();
         }
 
-        /// <summary>Fit the whole diorama in frame. Called after every expansion.</summary>
+        /// <summary>
+        /// Fit the whole diorama in frame. Called after every expansion, and by the
+        /// double tap that puts a lost player back where they started.
+        ///
+        /// The pivot is lifted off the ground on purpose. Orbiting a point at y = 0 puts
+        /// the terrain in the lower half of the screen with empty sky above it, which is
+        /// the "hard to find the middle" feeling; aiming at the height the creatures
+        /// actually stand at centres the thing the player is looking at.
+        /// </summary>
         public void Frame(Bounds bounds, bool immediate = false)
         {
             _bounds = bounds;
-            _targetPivot = new Vector3(bounds.center.x, 0f, bounds.center.z);
 
             float extent = Mathf.Max(bounds.size.x, bounds.size.z);
-            // Fit the extent into the vertical FOV with a little breathing room.
-            float fitDistance = extent / (2f * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad)) * 1.55f;
+
+            // Aim at the middle of the object itself, plinth included. Aiming at ground
+            // level puts everything below the horizon line and leaves a third of the
+            // screen as empty sky, which is what "hard to find the middle" looks like.
+            _targetPivot = bounds.center;
+            _targetPitch = DefaultPitch;
+            _targetYaw = Mathf.Round(_targetYaw / 90f) * 90f + 35f;
+
+            // Fit the extent into the vertical FOV with room for the top and bottom bars.
+            float fitDistance = extent / (2f * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad)) * 1.75f;
             _targetDistance = Mathf.Clamp(fitDistance, _minDistance, _maxDistance);
 
             if (immediate)
@@ -147,7 +166,7 @@ namespace LivingDiorama.Presentation
 
         public void FocusOn(Vector3 worldPoint, float distance = 6.5f)
         {
-            _targetPivot = new Vector3(worldPoint.x, 0f, worldPoint.z);
+            _targetPivot = new Vector3(worldPoint.x, worldPoint.y, worldPoint.z);
             _targetDistance = Mathf.Clamp(distance, _minDistance, _maxDistance);
             _idleTimer = 0f;
         }
@@ -210,7 +229,7 @@ namespace LivingDiorama.Presentation
                         break;
                     case TouchPhase.Ended when _dragDistance < 18f:
                         // A short press is a tap, not a failed orbit.
-                        Pick(t.position);
+                        if (!ConsumeDoubleTap()) Pick(t.position);
                         break;
                 }
                 return;
@@ -242,7 +261,10 @@ namespace LivingDiorama.Presentation
             {
                 Orbit(new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * 12f);
             }
-            if (Input.GetMouseButtonUp(0) && _dragDistance < 8f) Pick(Input.mousePosition);
+            if (Input.GetMouseButtonUp(0) && _dragDistance < 8f && !ConsumeDoubleTap())
+            {
+                Pick(Input.mousePosition);
+            }
 
             if (Input.GetMouseButton(2))
             {
@@ -253,12 +275,26 @@ namespace LivingDiorama.Presentation
             if (Mathf.Abs(wheel) > 0.01f) Zoom(-wheel * 0.6f);
         }
 
+        float _lastTapTime = -10f;
+
         void BeginDrag(Vector2 screenPosition)
         {
             _dragging = true;
             _dragStart = screenPosition;
             _dragDistance = 0f;
             _idleTimer = 0f;
+        }
+
+        /// <summary>Two quick taps reframe the whole diorama. Panning and orbiting a 3D
+        /// view will always eventually lose someone; this is the way back.</summary>
+        bool ConsumeDoubleTap()
+        {
+            float now = Time.unscaledTime;
+            bool isDouble = now - _lastTapTime < 0.35f;
+            _lastTapTime = isDouble ? -10f : now;
+
+            if (isDouble) Frame(_bounds);
+            return isDouble;
         }
 
         void Orbit(Vector2 delta)

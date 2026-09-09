@@ -45,7 +45,14 @@ namespace LivingDiorama.Presentation
 
             GameObject instance = null;
 
-            if (def.modelPrefab != null)
+            // A rigged model wins: it brings a skeleton and real clips, which no amount of
+            // procedural motion matches. Everything else falls back in order of fidelity.
+            if (def.riggedPrefab != null)
+            {
+                instance = UnityEngine.Object.Instantiate(def.riggedPrefab, parent);
+                AttachAnimator(instance, def);
+            }
+            else if (def.modelPrefab != null)
             {
                 instance = UnityEngine.Object.Instantiate(def.modelPrefab, parent);
             }
@@ -59,8 +66,24 @@ namespace LivingDiorama.Presentation
             instance.name = $"Model_{def.id}";
             instance.transform.localRotation = Quaternion.Euler(def.modelEuler);
             Normalise(instance, def);
-            Restyle(instance);
+            Restyle(instance, def);
             return instance;
+        }
+
+        /// <summary>Wire up the controller for a rigged species. Root motion stays off:
+        /// the simulation decides where a creature is, and a clip that also moved it would
+        /// fight the steering and drift the creature away from its own AI.</summary>
+        static void AttachAnimator(GameObject instance, CreatureDefinition def)
+        {
+            if (def.animatorController == null) return;
+
+            Animator animator = instance.GetComponentInChildren<Animator>();
+            if (animator == null) animator = instance.AddComponent<Animator>();
+
+            animator.runtimeAnimatorController = def.animatorController;
+            animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            animator.keepAnimatorStateOnDisable = false;
         }
 
         async Task<GameObject> InstantiateFromStreamingAssets(CreatureDefinition def, Transform parent)
@@ -200,7 +223,7 @@ namespace LivingDiorama.Presentation
         /// <summary>Move every material onto the stylised creature shader, keeping the
         /// generated albedo. Without this a Meshy export renders with default PBR and
         /// sticks out badly against the hand-tuned toon world.</summary>
-        void Restyle(GameObject instance)
+        void Restyle(GameObject instance, CreatureDefinition def)
         {
             if (_creatureShader == null) return;
 
@@ -215,15 +238,19 @@ namespace LivingDiorama.Presentation
                     Material src = source[i];
                     var mat = new Material(_creatureShader);
 
+                    // The definition's own albedo wins. It is the only one guaranteed to
+                    // exist: a rigged FBX brings no texture at all, and a glTF import can
+                    // bind its base map under any of half a dozen property names.
+                    Texture baseMap = def.albedo != null ? def.albedo : null;
+
                     if (src != null)
                     {
-                        Texture baseMap = FindBaseTexture(src);
-                        if (baseMap != null) mat.SetTexture(BaseMapId, baseMap);
-
-                        Color tint = FindBaseColour(src);
-                        mat.SetColor(BaseColorId, tint);
+                        baseMap ??= FindBaseTexture(src);
+                        mat.SetColor(BaseColorId, FindBaseColour(src));
                         mat.name = src.name + "_Styled";
                     }
+
+                    if (baseMap != null) mat.SetTexture(BaseMapId, baseMap);
 
                     styled[i] = mat;
                 }

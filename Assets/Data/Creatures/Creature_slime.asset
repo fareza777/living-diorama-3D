@@ -19,6 +19,9 @@ MonoBehaviour:
   rarity: 0
   icon: {fileID: 21300000, guid: 4dfea5f33186d4a4aa15d587edfedb1c, type: 3}
   modelPrefab: {fileID: 0}
+  riggedPrefab: {fileID: 0}
+  animatorController: {fileID: 0}
+  albedo: {fileID: 2800000, guid: 664318fa4ecf8f9409b9dc5eca374607, type: 3}
   streamingModelFile: slime.glb
   autoFitToBodyHeight: 1
   modelScale: 1

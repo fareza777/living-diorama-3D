@@ -50,6 +50,9 @@ namespace LivingDiorama.EditorTools
         public static void RebuildEverything()
         {
             ContentBuilder.RebuildContent();
+            // Runs after the content build, which creates the creature assets the
+            // importer then attaches rigs and controllers to.
+            AnimationImporter.ImportAll();
             ConfigureProject();
         }
 
@@ -238,12 +241,15 @@ namespace LivingDiorama.EditorTools
             }
             panel.themeStyleSheet = theme;
 
-            // Authored against a tall phone. Matching on width keeps the layout stable
-            // across the enormous range of Android aspect ratios.
+            // The reference resolution is the interface's unit of measure: at 1080 wide,
+            // one style pixel is one device pixel, so a 13px label is thirteen physical
+            // pixels on a phone -- illegible, however correct it looks on a monitor.
+            // Halving the reference doubles everything at once and keeps the proportions
+            // that were designed, rather than re-tuning forty numbers by hand.
             panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            panel.referenceResolution = new Vector2Int(1080, 1920);
+            panel.referenceResolution = new Vector2Int(540, 1170);
             panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-            panel.match = 0.35f;
+            panel.match = 0.5f;
             panel.clearColor = false;
 
             EditorUtility.SetDirty(panel);
@@ -260,12 +266,13 @@ namespace LivingDiorama.EditorTools
 
             // Border insets as a fraction of the image, per plate. Buttons are wide and
             // shallow so their vertical border has to be nearly the whole height.
+            // Only the big rectangular panel is nine-sliced. The pill-shaped plates have
+            // their ornament in the middle rather than the border, so slicing them tiles
+            // the ornament instead of the background -- which is what produced two gold
+            // ovals inside one button. They are stretched whole instead.
             var plateBorders = new Dictionary<string, Vector4>
             {
                 ["panel_frame"] = new(0.17f, 0.20f, 0.17f, 0.20f),
-                ["button_primary"] = new(0.22f, 0.30f, 0.22f, 0.30f),
-                ["button_ghost"] = new(0.22f, 0.30f, 0.22f, 0.30f),
-                ["chip_plate"] = new(0.24f, 0.32f, 0.24f, 0.32f),
             };
 
             foreach (string file in Directory.GetFiles(UiArtDir, "*.png"))
@@ -274,7 +281,10 @@ namespace LivingDiorama.EditorTools
                 if (AssetImporter.GetAtPath(path) is not TextureImporter importer) continue;
 
                 string key = Path.GetFileNameWithoutExtension(path);
-                bool isPlate = plateBorders.ContainsKey(key);
+                bool isPlate = key.StartsWith("panel_") || key.StartsWith("button_")
+                               || key.StartsWith("chip_") || key.StartsWith("banner_")
+                               || key.StartsWith("bar_");
+                bool isSliced = plateBorders.ContainsKey(key);
 
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
@@ -290,7 +300,7 @@ namespace LivingDiorama.EditorTools
                 // they can only be computed once the size cap has actually been applied.
                 // Reading the texture before the reimport measures the previous import and
                 // produces borders that are wrong by whatever the cap changed.
-                if (!isPlate) continue;
+                if (!isSliced) continue;
 
                 var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 if (sprite == null) continue;

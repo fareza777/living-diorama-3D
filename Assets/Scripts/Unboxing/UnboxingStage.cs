@@ -21,6 +21,9 @@ namespace LivingDiorama.Unboxing
         public Transform CreatureAnchor { get; private set; }
         public Vector3 StagePosition => transform.position;
 
+        GameObject _bodyMesh;
+        GameObject _lidMesh;
+        Material _propMaterial;
         Renderer _seamRenderer;
         Renderer _beamRenderer;
         Material _seamMaterial;
@@ -65,6 +68,85 @@ namespace LivingDiorama.Unboxing
             CreatureAnchor = new GameObject("CreatureAnchor").transform;
             CreatureAnchor.SetParent(transform, false);
             CreatureAnchor.localPosition = new Vector3(0f, 0.5f, 0f);
+
+            // Modelled props carry a texture and no vertex colours, so they need the
+            // creature shader, which samples a base map. The ground shader reads albedo
+            // straight off the vertex colours and renders an imported mesh near-black.
+            _ = UpgradeToModelledProps(Shader.Find("Living Diorama/Creature"));
+        }
+
+        /// <summary>
+        /// Swap the generated chest for the modelled one once it has streamed in.
+        ///
+        /// The generated chest is built synchronously so the stage is never empty, and a
+        /// player who opens a box in the first second still gets a chest. The modelled one
+        /// replaces it in place when it arrives, and if it never does, nothing breaks.
+        /// </summary>
+        async System.Threading.Tasks.Task UpgradeToModelledProps(Shader textured)
+        {
+            if (textured == null) return;
+
+            ChestModel.Parts chest = await ChestModel.LoadAsync("chest.glb", textured);
+            if (!chest.IsValid || this == null) return;
+
+            // Match the height the rest of the staging was tuned against.
+            const float targetHeight = 0.74f;
+            float scale = chest.Bounds.size.y > 0.001f ? targetHeight / chest.Bounds.size.y : 1f;
+
+            ChestScale = scale;
+            ChestRoot.localScale = Vector3.one * scale;
+
+            var bodyFilter = _bodyMesh.GetComponent<MeshFilter>();
+            Destroy(bodyFilter.sharedMesh);
+            bodyFilter.sharedMesh = chest.Body;
+            _bodyMesh.GetComponent<MeshRenderer>().sharedMaterial = chest.Material ?? _propMaterial;
+
+            _hinge = chest.Hinge;
+            LidRoot.localPosition = _hinge;
+
+            var lidFilter = _lidMesh.GetComponent<MeshFilter>();
+            Destroy(lidFilter.sharedMesh);
+            lidFilter.sharedMesh = chest.Lid;
+            _lidMesh.transform.localPosition = -chest.Hinge;
+            _lidMesh.GetComponent<MeshRenderer>().sharedMaterial = chest.Material ?? _propMaterial;
+
+            if (_seamRenderer != null)
+            {
+                float ring = chest.Bounds.size.x / (ProceduralMeshes.ChestHalf * 2f) * 0.86f;
+                _seamRenderer.transform.localScale = new Vector3(ring, 1f, ring);
+                _seamRenderer.transform.localPosition = new Vector3(
+                    0f, chest.Hinge.y - ProceduralMeshes.ChestLidAnchor.y, 0f);
+            }
+
+            await UpgradePedestal(textured);
+        }
+
+        async System.Threading.Tasks.Task UpgradePedestal(Shader textured)
+        {
+            GameObject model = await GlbProps.LoadAsync("pedestal.glb");
+            if (model == null || _plinth == null || this == null) return;
+
+            var renderer = model.GetComponentInChildren<MeshRenderer>();
+            Material material = GlbProps.Restyle(renderer, textured);
+
+            foreach (MeshRenderer r in model.GetComponentsInChildren<MeshRenderer>())
+            {
+                r.sharedMaterial = material;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+
+            // Replace the generated disc, keeping the slow counter-rotation it lives on.
+            foreach (Transform child in _plinth) Destroy(child.gameObject);
+            var filter = _plinth.GetComponent<MeshFilter>();
+            if (filter != null) filter.sharedMesh = null;
+
+            model.transform.SetParent(_plinth, false);
+
+            var bounds = new Bounds(model.transform.position, Vector3.zero);
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>()) bounds.Encapsulate(r.bounds);
+
+            float width = Mathf.Max(bounds.size.x, bounds.size.z);
+            if (width > 0.001f) model.transform.localScale = Vector3.one * (1.55f / width);
         }
 
         void BuildPlinth(Material material)
@@ -102,12 +184,19 @@ namespace LivingDiorama.Unboxing
 
             LidRoot = new GameObject("Lid").transform;
             LidRoot.SetParent(ChestRoot, false);
-            LidRoot.localPosition = ProceduralMeshes.ChestLidAnchor;
+            _hinge = ProceduralMeshes.ChestHinge;
+            LidRoot.localPosition = _hinge;
 
-            var lid = new GameObject("LidMesh");
-            lid.transform.SetParent(LidRoot, false);
-            lid.AddComponent<MeshFilter>().sharedMesh = ProceduralMeshes.ChestLid(wood, metal);
-            lid.AddComponent<MeshRenderer>().sharedMaterial = propMaterial;
+            _lidMesh = new GameObject("LidMesh");
+            _lidMesh.transform.SetParent(LidRoot, false);
+            // Offset so the mesh still sits where it belongs while the pivot is the hinge.
+            _lidMesh.transform.localPosition = -ProceduralMeshes.ChestHinge
+                                               + ProceduralMeshes.ChestLidAnchor;
+            _lidMesh.AddComponent<MeshFilter>().sharedMesh = ProceduralMeshes.ChestLid(wood, metal);
+            _lidMesh.AddComponent<MeshRenderer>().sharedMaterial = propMaterial;
+
+            _bodyMesh = body;
+            _propMaterial = propMaterial;
 
             var seam = new GameObject("Seam");
             seam.transform.SetParent(ChestRoot, false);
@@ -235,6 +324,25 @@ namespace LivingDiorama.Unboxing
         // ---- presentation control -------------------------------------------
 
         public void SetVisible(bool visible) => gameObject.SetActive(visible);
+
+        /// <summary>Put the lid back on its hinge, closed, ready for the next opening.
+        /// The stage owns where the hinge is, because that moves when the modelled chest
+        /// replaces the generated one.</summary>
+        public void ResetLid()
+        {
+            if (LidRoot == null) return;
+
+            LidRoot.localPosition = _hinge;
+            LidRoot.localRotation = Quaternion.identity;
+            LidRoot.gameObject.SetActive(true);
+        }
+
+        Vector3 _hinge = ProceduralMeshes.ChestHinge;
+
+        /// <summary>The chest's resting scale. The modelled chest is normalised to the
+        /// staging height, so the entrance animation has to grow towards this rather than
+        /// towards one, or swapping the model would resize the chest mid-sequence.</summary>
+        public float ChestScale { get; private set; } = 1f;
 
         /// <summary>Tint the whole rig to the rarity being revealed. Doing this on the
         /// lights and the glow rather than on the chest means one prop serves every tier

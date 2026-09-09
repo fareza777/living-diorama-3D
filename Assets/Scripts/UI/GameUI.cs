@@ -160,7 +160,8 @@ namespace LivingDiorama.UI
         {
             UiSkin.SkinAll(_root);
 
-            UiSkin.SkinIconButton(_turntableButton, "icon_turntable");
+            // The gear reads instantly at 54px; the turntable pictogram does not, and an
+            // ambiguous icon is worse than a word.
             UiSkin.SkinIconButton(_root.Q<Button>("btn-settings"), "icon_settings");
 
             UiSkin.PrefixIcon(_root.Q<Button>("btn-box"), "icon_chest");
@@ -445,6 +446,10 @@ namespace LivingDiorama.UI
             // to a scheduled callback bought a nicer slide-in, at the cost of the reward
             // card being invisible whenever the scheduler was not running -- which is the
             // one thing this screen may never get wrong.
+            // The HUD tray sits where the card's buttons land, so it stands down for the
+            // reveal. A reward screen should be the only thing on screen.
+            _hud.AddToClassList("hidden");
+
             _revealLayer.RemoveFromClassList("hidden");
             _revealCard.AddToClassList("reveal-card--in");
 
@@ -457,6 +462,7 @@ namespace LivingDiorama.UI
             Click();
             _revealCard.RemoveFromClassList("reveal-card--in");
             _revealLayer.AddToClassList("hidden");
+            _hud.RemoveFromClassList("hidden");
 
             _unboxing.Dismiss();
             _camera.InputBlocked = false;

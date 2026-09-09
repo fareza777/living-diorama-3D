@@ -297,7 +297,7 @@ namespace LivingDiorama.Diorama
         // ---- the mystery chest ---------------------------------------------
         // Sized in a 1-unit cube so the unboxing stage can scale it freely.
 
-        const float ChestHalf = 0.42f;
+        const float ChestHalfConst = 0.42f;
         const float ChestBodyHeight = 0.44f;
         const float BandThickness = 0.035f;
 
@@ -308,36 +308,36 @@ namespace LivingDiorama.Diorama
             // Planked body: five slats with a sliver of shadow between them, which reads
             // as carpentry rather than as a cube.
             const int planks = 5;
-            float plankWidth = ChestHalf * 2f / planks;
+            float plankWidth = ChestHalfConst * 2f / planks;
 
             for (int i = 0; i < planks; i++)
             {
-                float x0 = -ChestHalf + i * plankWidth + 0.006f;
+                float x0 = -ChestHalfConst + i * plankWidth + 0.006f;
                 float x1 = x0 + plankWidth - 0.012f;
                 Color shade = wood * (0.92f + (i % 2) * 0.12f);
                 shade.a = 1f;
 
-                Box(b, new Vector3(x0, 0f, -ChestHalf), new Vector3(x1, ChestBodyHeight, ChestHalf), shade);
+                Box(b, new Vector3(x0, 0f, -ChestHalfConst), new Vector3(x1, ChestBodyHeight, ChestHalfConst), shade);
             }
 
             // Iron banding around the girth and up the corners.
-            Box(b, new Vector3(-ChestHalf - 0.012f, ChestBodyHeight * 0.30f, -ChestHalf - 0.012f),
-                   new Vector3(ChestHalf + 0.012f, ChestBodyHeight * 0.30f + BandThickness, ChestHalf + 0.012f),
+            Box(b, new Vector3(-ChestHalfConst - 0.012f, ChestBodyHeight * 0.30f, -ChestHalfConst - 0.012f),
+                   new Vector3(ChestHalfConst + 0.012f, ChestBodyHeight * 0.30f + BandThickness, ChestHalfConst + 0.012f),
                    metal);
 
             foreach (float sx in new[] { -1f, 1f })
             {
                 foreach (float sz in new[] { -1f, 1f })
                 {
-                    var corner = new Vector3(sx * ChestHalf, 0f, sz * ChestHalf);
+                    var corner = new Vector3(sx * ChestHalfConst, 0f, sz * ChestHalfConst);
                     Box(b, corner + new Vector3(-0.045f * sx, 0f, -0.045f * sz) - new Vector3(0.012f, 0f, 0.012f),
                            corner + new Vector3(0.012f, ChestBodyHeight, 0.012f), metal);
                 }
             }
 
             // Lock plate on the front face.
-            Box(b, new Vector3(-0.09f, ChestBodyHeight * 0.42f, -ChestHalf - 0.03f),
-                   new Vector3(0.09f, ChestBodyHeight * 0.94f, -ChestHalf - 0.012f), metal * 1.15f);
+            Box(b, new Vector3(-0.09f, ChestBodyHeight * 0.42f, -ChestHalfConst - 0.03f),
+                   new Vector3(0.09f, ChestBodyHeight * 0.94f, -ChestHalfConst - 0.012f), metal * 1.15f);
 
             return b.Bake("ChestBody");
         }
@@ -348,7 +348,7 @@ namespace LivingDiorama.Diorama
             var b = new Builder();
 
             const int segments = 7;
-            const float radius = ChestHalf;
+            const float radius = ChestHalfConst;
             const float lidHeight = 0.28f;
 
             // Half-barrel sweep from one long edge to the other.
@@ -360,10 +360,10 @@ namespace LivingDiorama.Diorama
                 Vector3 p0 = new(-Mathf.Cos(a0) * radius, Mathf.Sin(a0) * lidHeight, 0f);
                 Vector3 p1 = new(-Mathf.Cos(a1) * radius, Mathf.Sin(a1) * lidHeight, 0f);
 
-                Vector3 f0 = p0 + Vector3.forward * -ChestHalf;
-                Vector3 f1 = p1 + Vector3.forward * -ChestHalf;
-                Vector3 b0 = p0 + Vector3.forward * ChestHalf;
-                Vector3 b1 = p1 + Vector3.forward * ChestHalf;
+                Vector3 f0 = p0 + Vector3.forward * -ChestHalfConst;
+                Vector3 f1 = p1 + Vector3.forward * -ChestHalfConst;
+                Vector3 b0 = p0 + Vector3.forward * ChestHalfConst;
+                Vector3 b1 = p1 + Vector3.forward * ChestHalfConst;
 
                 Color shade = wood * (0.88f + i / (float)segments * 0.24f);
                 shade.a = 1f;
@@ -371,13 +371,13 @@ namespace LivingDiorama.Diorama
                 b.AddQuad(f0, f1, b1, b0, shade);
 
                 // End caps.
-                b.AddTriangle(f0, new Vector3(0f, 0f, -ChestHalf), f1, wood * 0.8f);
-                b.AddTriangle(b1, new Vector3(0f, 0f, ChestHalf), b0, wood * 0.8f);
+                b.AddTriangle(f0, new Vector3(0f, 0f, -ChestHalfConst), f1, wood * 0.8f);
+                b.AddTriangle(b1, new Vector3(0f, 0f, ChestHalfConst), b0, wood * 0.8f);
             }
 
             // A single band over the crown.
-            Box(b, new Vector3(-0.03f, -0.01f, -ChestHalf - 0.012f),
-                   new Vector3(0.03f, lidHeight + 0.012f, ChestHalf + 0.012f), metal);
+            Box(b, new Vector3(-0.03f, -0.01f, -ChestHalfConst - 0.012f),
+                   new Vector3(0.03f, lidHeight + 0.012f, ChestHalfConst + 0.012f), metal);
 
             return b.Bake("ChestLid");
         }
@@ -390,7 +390,7 @@ namespace LivingDiorama.Diorama
             var b = new Builder();
             const float y = ChestBodyHeight;
             const float t = 0.012f;
-            float r = ChestHalf + 0.02f;
+            float r = ChestHalfConst + 0.02f;
 
             Box(b, new Vector3(-r, y - t, -r), new Vector3(r, y + t, -r + t * 2f), Color.white);
             Box(b, new Vector3(-r, y - t, r - t * 2f), new Vector3(r, y + t, r), Color.white);
@@ -402,6 +402,12 @@ namespace LivingDiorama.Diorama
 
         /// <summary>Where the lid sits when closed, in the chest's local space.</summary>
         public static Vector3 ChestLidAnchor => new(0f, ChestBodyHeight, 0f);
+
+        /// <summary>The hinge the lid swings on: the back edge of the seam.</summary>
+        public static Vector3 ChestHinge => new(0f, ChestBodyHeight, ChestHalfConst);
+
+        /// <summary>Half width of the generated chest, so other props can match its scale.</summary>
+        public static float ChestHalf => ChestHalfConst;
 
         /// <summary>A small pile of berries used as the tile stockpile marker.</summary>
         public static Mesh BerryPile(int seed, Color basket, Color berries)

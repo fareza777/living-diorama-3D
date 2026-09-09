@@ -23,6 +23,23 @@ namespace LivingDiorama.Data
         [Tooltip("Optional authored prefab. Takes priority over the GLB path below.")]
         public GameObject modelPrefab;
 
+        [Tooltip("Rigged model with a skeleton, for species that were fitted to a humanoid " +
+                 "armature. When set this wins over everything else, and the creature plays " +
+                 "real animation clips instead of the procedural gait.")]
+        public GameObject riggedPrefab;
+
+        [Tooltip("Controller holding one state per behaviour id: idle, walk, run, attack, " +
+                 "hit, knockout, sleep, eat, sneak, socialise, celebrate.")]
+        public RuntimeAnimatorController animatorController;
+
+        [Tooltip("The creature's colour map. Rigged FBX exports arrive without their " +
+                 "texture, which renders them as grey plastic, so the albedo is carried " +
+                 "here explicitly and applied to whatever model ends up being used.")]
+        public Texture2D albedo;
+
+        /// <summary>True when this species animates from clips rather than from code.</summary>
+        public bool IsSkeletal => riggedPrefab != null && animatorController != null;
+
         [Tooltip("File name (with extension) inside StreamingAssets/Creatures, e.g. 'goblin.glb'. " +
                  "Loaded at runtime with glTFast so new creatures can ship without a rebuild.")]
         public string streamingModelFile = "";

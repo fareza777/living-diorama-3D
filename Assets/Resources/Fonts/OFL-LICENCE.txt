@@ -1,0 +1,10 @@
+These typefaces are licensed under the SIL Open Font Licence, Version 1.1,
+which permits bundling them inside an application and redistributing them.
+
+  Cinzel   (c) Natanael Gama          https://fonts.google.com/specimen/Cinzel
+  Nunito   (c) Vernon Adams and       https://fonts.google.com/specimen/Nunito
+           the Nunito Project Authors
+
+Full licence text: https://scripts.sil.org/OFL
+
+Fetched by Tools/fetch_fonts.py.

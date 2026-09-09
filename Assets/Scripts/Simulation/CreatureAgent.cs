@@ -228,6 +228,11 @@ namespace LivingDiorama.Simulation
             Current = next;
             BehaviourTime = 0f;
             BehaviourTimer = 0f;
+
+            // Rigged creatures pick their animation from the behaviour id, so the two
+            // vocabularies are the same words on purpose.
+            if (next != null) View?.SetBehaviour(next.Id);
+
             next?.OnEnter(this, ctx);
         }
 

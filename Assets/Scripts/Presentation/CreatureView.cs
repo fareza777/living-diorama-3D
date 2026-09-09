@@ -75,8 +75,86 @@ namespace LivingDiorama.Presentation
             }
 
             _model = model;
+            BindAnimator();
             ModelReady = true;
             PlaySpawn();
+        }
+
+        // ---- skeletal animation ---------------------------------------------
+
+        Animator _animator;
+        string _state;
+        float _oneShotUntil;
+
+        /// <summary>True when this creature plays real clips rather than the procedural gait.</summary>
+        public bool IsSkeletal => _animator != null;
+
+        void BindAnimator()
+        {
+            Animator animator = _model.GetComponentInChildren<Animator>();
+            if (animator == null || animator.runtimeAnimatorController == null) return;
+
+            _animator = animator;
+            _state = "idle";
+        }
+
+        /// <summary>
+        /// Behaviour ids and animator state names are deliberately the same words, so the
+        /// two stay in step by construction: adding a behaviour and adding a clip named
+        /// after it is all that is needed. Only the cases where several behaviours share
+        /// one clip are listed here.
+        /// </summary>
+        static string StateFor(string behaviourId) => behaviourId switch
+        {
+            "wander" => "walk",
+            "seek_food" => "walk",
+            "flee" => "run",
+            "chase" => "run",
+            "play_water" => "celebrate",
+            "steal" => "sneak",
+            _ => behaviourId,
+        };
+
+        /// <summary>Called when the brain picks a new behaviour.</summary>
+        public void SetBehaviour(string behaviourId)
+        {
+            if (_animator == null || string.IsNullOrEmpty(behaviourId)) return;
+
+            string next = StateFor(behaviourId);
+            if (next == _state) return;
+
+            _state = next;
+            if (Time.time < _oneShotUntil) return;   // let a reaction finish first
+
+            _animator.CrossFadeInFixedTime(next, 0.18f);
+        }
+
+        /// <summary>Interrupt with a reaction, then fall back to whatever the creature is
+        /// actually doing once it has played.</summary>
+        void PlayOneShot(string state, float seconds)
+        {
+            if (_animator == null) return;
+
+            _oneShotUntil = Time.time + seconds;
+            _animator.CrossFadeInFixedTime(state, 0.08f);
+        }
+
+        void TickAnimator()
+        {
+            if (_animator == null) return;
+
+            // Match the playback rate to how fast the creature is really travelling, so a
+            // creature squeezing past another does not moonwalk.
+            bool moving = _state is "walk" or "run";
+            _animator.speed = moving
+                ? Mathf.Clamp(_gait, 0.35f, 2f)
+                : 1f;
+
+            if (_oneShotUntil > 0f && Time.time >= _oneShotUntil)
+            {
+                _oneShotUntil = 0f;
+                _animator.CrossFadeInFixedTime(_state, 0.15f);
+            }
         }
 
         GameObject BuildPlaceholder()
@@ -100,25 +178,69 @@ namespace LivingDiorama.Presentation
 
         public void SetSleeping(bool sleeping) => _sleeping = sleeping;
 
-        public void PlayEat() => Trigger(Reaction.Eat, 0.85f);
-        public void PlayAttack() => Trigger(Reaction.Attack, 0.45f);
-        public void PlayStartle() => Trigger(Reaction.Startle, 0.55f);
+        /// <summary>Whether the procedural rig should drive the model this frame. A
+        /// skeletal creature is fully described by its clips, and layering a synthetic bob
+        /// on top of real animation only makes it look drunk.</summary>
+        bool UseProceduralRig => _animator == null;
+
+        public void PlayEat()
+        {
+            if (_animator != null) PlayOneShot("eat", 1.4f);
+            else Trigger(Reaction.Eat, 0.85f);
+        }
+
+        public void PlayAttack()
+        {
+            if (_animator != null) PlayOneShot("attack", 1.0f);
+            else Trigger(Reaction.Attack, 0.45f);
+        }
+
+        public void PlayStartle()
+        {
+            if (_animator != null) PlayOneShot("hit", 0.6f);
+            else Trigger(Reaction.Startle, 0.55f);
+        }
+
         public void PlaySteal() => Trigger(Reaction.Steal, 0.6f);
         public void PlaySplash() => Trigger(Reaction.Splash, 0.7f);
-        public void PlaySpawn() => Trigger(Reaction.Startle, 0.8f);
+
+        public void PlaySpawn()
+        {
+            // A rigged creature is already standing in its idle; a jolt on arrival would
+            // read as a glitch rather than as surprise.
+            if (_animator == null) Trigger(Reaction.Startle, 0.8f);
+        }
 
         public void PlayHitReaction(Vector3 fromDirection)
         {
+            if (_animator != null)
+            {
+                PlayOneShot("hit", 0.8f);
+                return;
+            }
+
             _reactionDirection = fromDirection.sqrMagnitude > 0.001f ? fromDirection.normalized : -transform.forward;
             Trigger(Reaction.Hit, 0.4f);
         }
 
-        public void PlayKnockOut() => _emote?.Show(Mood.KnockedOut, 4f);
+        public void PlayKnockOut()
+        {
+            _emote?.Show(Mood.KnockedOut, 4f);
+            if (_animator != null) PlayOneShot("knockout", 9999f);
+        }
 
         public void PlayRecover()
         {
-            Trigger(Reaction.Startle, 0.6f);
             _emote?.Hide();
+
+            if (_animator != null)
+            {
+                _oneShotUntil = 0f;
+                _animator.CrossFadeInFixedTime(_state, 0.25f);
+                return;
+            }
+
+            Trigger(Reaction.Startle, 0.6f);
         }
 
         public void PlayEmote(Mood mood) => _emote?.Show(mood, 2.5f);
@@ -147,6 +269,13 @@ namespace LivingDiorama.Presentation
 
             _sleepBlend = Mathf.SmoothDamp(_sleepBlend, _sleeping ? 1f : 0f, ref _sleepVelocity, 0.35f);
             _knockBlend = Mathf.SmoothDamp(_knockBlend, _agent.IsKnockedOut ? 1f : 0f, ref _knockVelocity, 0.25f);
+
+            if (!UseProceduralRig)
+            {
+                TickAnimator();
+                if (_emote != null) _emote.Tick(dt);
+                return;
+            }
 
             _phase += GaitFrequency() * dt * Tau;
             if (_phase > Tau * 1024f) _phase -= Tau * 1024f;

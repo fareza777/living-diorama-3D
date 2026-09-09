@@ -12,7 +12,11 @@ Two families of asset, handled differently on purpose:
   * plates (panels, buttons, chips) stay opaque and are nine-sliced by the UI, which
     is both sharper and avoids asking a diffusion model for a clean hollow centre.
 
-Files already on disk are skipped, so re-running is free.
+Everything shares one art direction paragraph. Getting that paragraph specific is
+what separates a coherent interface kit from a pile of individually plausible
+images: without it every asset arrives from a slightly different game.
+
+Files already on disk are skipped, so re-running is free. Delete a file to reroll it.
 
 Usage:
     set REPLICATE_API_TOKEN first (see .env.example)
@@ -40,47 +44,74 @@ OUT_DIR = ROOT / "Assets" / "Resources" / "UI" / "Art"
 FLUX = "black-forest-labs/flux-schnell"
 REMOVE_BG_VERSION = "95fcc2a26d3899cd6c2691c900465aaeff466285a65c14638cc5f36f34befaf1"
 
-# One art direction sentence, appended to everything, so twenty separate generations
-# still look like they came out of the same studio.
+# The house style. Named materials and a named lighting setup, because "fantasy game
+# UI" alone produces a different game every time you ask.
 HOUSE_STYLE = (
-    "stylised fantasy game interface asset, hand-painted look with clean bold shapes, "
-    "warm brass and dark carved wood palette, soft rim light, crisp readable silhouette, "
-    "no text, no lettering, no watermark, centred composition"
+    "premium mobile game interface asset in a cosy storybook fantasy style, "
+    "hand-painted digital illustration with clean bold shapes and confident edges, "
+    "materials are aged walnut wood, warm antique brass and deep midnight blue enamel, "
+    "soft top-left key light with a gentle warm rim, subtle painted texture, "
+    "rich saturated colour, high contrast against a dark interface, "
+    "polished and expensive looking, no text, no lettering, no numbers, no watermark, "
+    "no drop shadow on the background, centred"
 )
 
-ICON_STYLE = HOUSE_STYLE + ", single object, plain flat white background, even lighting"
-PLATE_STYLE = HOUSE_STYLE + ", symmetrical, seamless border decoration, empty flat centre panel"
+ICON_STYLE = (
+    HOUSE_STYLE + ", a single object filling the frame, three quarter view, "
+    "thick unified silhouette readable at 48 pixels, plain flat white background, "
+    "even studio lighting"
+)
+
+PLATE_STYLE = (
+    HOUSE_STYLE + ", perfectly symmetrical left to right and top to bottom, "
+    "ornament confined to the border, the centre is a large empty flat panel with no "
+    "decoration whatsoever so that text can be laid over it"
+)
 
 # --------------------------------------------------------------------- cutouts
 
 ICONS: dict[str, str] = {
-    "icon_coin": "a single thick gold coin stamped with an embossed oak leaf, seen face on",
-    "icon_essence": "a glowing faceted teal crystal shard floating upright",
-    "icon_key": "a small ornate brass key with a clover-shaped bow",
-    "icon_chest": "a small closed wooden treasure chest with iron bands and a brass lock",
-    "icon_collection": "an open leather-bound bestiary book with a ribbon bookmark",
-    "icon_expand": "a rolled parchment map with a small brass compass rose resting on it",
-    "icon_settings": "a single ornate brass gear cog",
-    "icon_turntable": "a circular arrow curving around a small round display pedestal",
-    "icon_day": "a small stylised sun with soft rounded rays",
-    "icon_night": "a small stylised crescent moon with two tiny stars",
+    "icon_coin": "a single thick gold coin stamped with an embossed oak leaf, seen face on, "
+                 "worn edges catching the light",
+    "icon_essence": "a glowing faceted teal crystal shard floating upright, inner light, "
+                    "wisps of pale vapour at its base",
+    "icon_key": "a small ornate antique brass key with a clover shaped bow and fine filigree",
+    "icon_chest": "a small closed treasure chest of dark banded wood with brass corners "
+                  "and a heavy lock plate",
+    "icon_collection": "an open leather bound bestiary, thick cream pages, a silk ribbon "
+                       "bookmark and brass corner caps",
+    "icon_expand": "a partly unrolled parchment map with a small brass compass rose resting "
+                   "on it, curled corners",
+    "icon_settings": "a single ornate brass gear cog with a bevelled rim and a polished centre",
+    "icon_turntable": "a circular brass arrow curving all the way around a small round "
+                      "display pedestal, rotation symbol",
+    "icon_day": "a small stylised sun with soft rounded rays, warm gold, gentle glow",
+    "icon_night": "a small stylised crescent moon in pale silver with two tiny stars",
+    "icon_heart": "a small plump red heart with a soft highlight, storybook style",
+    "icon_food": "a small woven basket of ripe red berries",
+    "icon_close": "a brass X shaped clasp, two crossed bars with bevelled ends",
 }
 
 ART: dict[str, tuple[str, str]] = {
     "box_wooden": (
-        "a closed wooden treasure chest with iron banding and a brass lock plate, "
-        "three quarter view, resting on nothing",
+        "a closed treasure chest of aged walnut wood with iron banding and a brass lock "
+        "plate, three quarter view, sitting on nothing, warm inviting",
         "1:1",
     ),
     "box_arcane": (
-        "a closed dark violet mystery box inlaid with glowing arcane runes and a purple "
-        "crystal set into the lid, three quarter view, faint magical glow",
+        "a closed dark violet mystery box inlaid with glowing arcane runes and a large "
+        "purple crystal set into the lid, three quarter view, magical inner glow",
         "1:1",
     ),
     "title_emblem": (
-        "an ornate circular emblem containing a miniature world under a glass dome on a "
-        "brass stand, a tiny pine tree and a crescent moon inside the dome, gold line art, "
-        "perfectly symmetrical heraldic badge",
+        "an ornate circular heraldic emblem containing a miniature world under a clear "
+        "glass dome on a turned brass stand, a tiny pine tree and a crescent moon inside "
+        "the dome, antique gold filigree frame, perfectly symmetrical badge",
+        "1:1",
+    ),
+    "rarity_burst": (
+        "a radial starburst of soft light rays fanning out from a bright centre, "
+        "clean simple shape, pure white on black, no objects",
         "1:1",
     ),
 }
@@ -91,23 +122,33 @@ ART: dict[str, tuple[str, str]] = {
 
 PLATES: dict[str, tuple[str, str]] = {
     "panel_frame": (
-        "a rectangular fantasy interface panel, dark carved wood border with brass corner "
-        "fittings and a plain dark navy leather centre",
+        "a rectangular interface panel, aged walnut wood border with antique brass corner "
+        "fittings and rivets, and a large plain deep midnight blue enamel centre",
         "4:3",
     ),
     "button_primary": (
-        "a horizontal pill shaped brass interface button plate, warm polished gold metal "
-        "with small rivets along the rim and a plain slightly darker centre",
+        "a horizontal pill shaped button plate, polished antique brass with a bevelled rim "
+        "and small rivets, and a plain slightly darker brushed brass centre",
         "21:9",
     ),
     "button_ghost": (
-        "a horizontal pill shaped dark carved wood interface button plate with thin iron "
-        "trim and a plain dark centre",
+        "a horizontal pill shaped button plate of dark aged walnut wood with a thin brass "
+        "trim, and a plain very dark brown centre",
         "21:9",
     ),
     "chip_plate": (
-        "a small horizontal pill shaped dark stone interface plate with a thin brass rim "
-        "and a plain dark centre",
+        "a small horizontal pill shaped plate of dark slate stone with a thin brass rim, "
+        "and a plain very dark centre",
+        "21:9",
+    ),
+    "banner_header": (
+        "a wide horizontal banner plate of deep midnight blue enamel with brass end caps "
+        "and a fine brass pinstripe, and a plain empty centre",
+        "21:9",
+    ),
+    "bar_track": (
+        "a long horizontal empty groove of dark slate stone with a thin brass surround, "
+        "an empty progress bar channel",
         "21:9",
     ),
 }

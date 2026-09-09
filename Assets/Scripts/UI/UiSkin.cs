@@ -38,11 +38,22 @@ namespace LivingDiorama.UI
             element.style.backgroundImage = new StyleBackground(sprite);
             element.style.backgroundColor = Color.clear;
 
+            // A sprite with no border is stretched whole. Slicing is only right when the
+            // ornament lives in the border; the pill plates carry theirs in the middle,
+            // and slicing those tiles the ornament rather than the background.
             Vector4 border = sprite.border;
-            element.style.unitySliceLeft = Mathf.RoundToInt(border.x);
-            element.style.unitySliceBottom = Mathf.RoundToInt(border.y);
-            element.style.unitySliceRight = Mathf.RoundToInt(border.z);
-            element.style.unitySliceTop = Mathf.RoundToInt(border.w);
+            if (border.sqrMagnitude > 0.5f)
+            {
+                element.style.unitySliceLeft = Mathf.RoundToInt(border.x);
+                element.style.unitySliceBottom = Mathf.RoundToInt(border.y);
+                element.style.unitySliceRight = Mathf.RoundToInt(border.z);
+                element.style.unitySliceTop = Mathf.RoundToInt(border.w);
+            }
+            else
+            {
+                element.style.backgroundSize = new StyleBackgroundSize(
+                    new BackgroundSize(Length.Percent(100), Length.Percent(100)));
+            }
 
             // The painted frame is the border now, so drop the drawn one.
             element.style.borderLeftWidth = 0;
@@ -119,30 +130,28 @@ namespace LivingDiorama.UI
         {
             if (root == null) return;
 
-            foreach (VisualElement card in root.Query<VisualElement>(className: "modal__card").Build())
-            {
-                ApplyPlate(card, "panel_frame");
-            }
+            // Modal cards are deliberately not framed. An ornate border around a dense
+            // list fights the content for attention and eats the padding the text needs;
+            // the fantasy is carried by the buttons and the title face instead, and the
+            // card itself stays a quiet sheet of dark glass that words sit cleanly on.
 
-            foreach (VisualElement chip in root.Query<VisualElement>(className: "chip").Build())
-            {
-                ApplyPlate(chip, "chip_plate");
-            }
+            // Chips are deliberately not plated. The painted pill is a 21:9 image and a
+            // currency chip is nearer 2:1, so stretching it crushes the brass rim into a
+            // blob; clean dark glass with a bright icon reads better and stays legible at
+            // any width the number happens to need.
 
             foreach (Button button in root.Query<Button>(className: "button--primary").Build())
             {
                 ApplyPlate(button, "button_primary");
-                button.style.color = new Color(0.16f, 0.10f, 0.03f);
+                // The plate's centre is dark navy under a brass bezel, so the label is
+                // light on dark like everything else rather than dark on gold.
+                button.style.color = new Color(1f, 0.93f, 0.78f);
             }
 
             foreach (Button button in root.Query<Button>(className: "button--ghost").Build())
             {
                 ApplyPlate(button, "button_ghost");
-                // The generated secondary plate came out lighter than its brief, and pale
-                // text on it is unreadable. Tinting the image down is a one-line fix that
-                // does not require regenerating the art or inverting the type colour.
-                button.style.unityBackgroundImageTintColor = new Color(0.44f, 0.41f, 0.47f);
-                button.style.color = new Color(0.96f, 0.93f, 0.86f);
+                button.style.color = new Color(0.97f, 0.94f, 0.88f);
             }
 
             SkinCurrencyIcons(root);

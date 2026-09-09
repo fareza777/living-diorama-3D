@@ -18,6 +18,9 @@ MonoBehaviour:
   rarity: 1
   icon: {fileID: 21300000, guid: a12cb1adf05d4d14ebb55e320ea61e3d, type: 3}
   modelPrefab: {fileID: 0}
+  riggedPrefab: {fileID: 0}
+  animatorController: {fileID: 0}
+  albedo: {fileID: 2800000, guid: 72139d8d9e01c704d8cc091c6cfc5a01, type: 3}
   streamingModelFile: wolf.glb
   autoFitToBodyHeight: 1
   modelScale: 1

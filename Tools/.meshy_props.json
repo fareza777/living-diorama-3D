@@ -1,0 +1,10 @@
+{
+  "props": {
+    "chest": "01a083c5-8cf8-77ad-a479-2fe07d528a56",
+    "pedestal": "01a083c5-95e9-702f-8ec7-5a9528f9cf1a"
+  },
+  "refine": {
+    "chest": "01a083d2-aa39-72c4-8afb-36392dec9804",
+    "pedestal": "01a083d2-b0b2-76ef-ac58-3b93da5f9973"
+  }
+}

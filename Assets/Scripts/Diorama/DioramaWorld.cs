@@ -62,6 +62,9 @@ namespace LivingDiorama.Diorama
 
         DioramaPedestal _pedestal;
 
+        /// <summary>Roughly how far the stand hangs below the soil slab.</summary>
+        const float PedestalDrop = 0.75f;
+
         /// <summary>Lowest point of any tile's soil slab, so the stand always meets it.</summary>
         float SlabBottom
         {
@@ -123,14 +126,21 @@ namespace LivingDiorama.Diorama
             {
                 if (_tiles.Count == 0) return new Bounds(Vector3.zero, Vector3.one * _tileSize);
 
-                var min = new Vector3(float.MaxValue, 0f, float.MaxValue);
-                var max = new Vector3(float.MinValue, 0f, float.MinValue);
+                // The vertical extent matters: the diorama is a slab on a plinth, and a
+                // flat footprint puts the framing pivot well above the object's real
+                // centre, which is what drops the whole thing into the bottom of frame.
+                float top = 0f;
+                float bottom = SlabBottom - PedestalDrop;
+
+                var min = new Vector3(float.MaxValue, bottom, float.MaxValue);
+                var max = new Vector3(float.MinValue, top, float.MinValue);
 
                 foreach (KeyValuePair<Vector2Int, DioramaTile> kv in _tiles)
                 {
                     Vector3 o = TileOrigin(kv.Key);
-                    min = Vector3.Min(min, o);
-                    max = Vector3.Max(max, o + new Vector3(_tileSize, 0f, _tileSize));
+                    min = new Vector3(Mathf.Min(min.x, o.x), bottom, Mathf.Min(min.z, o.z));
+                    max = new Vector3(Mathf.Max(max.x, o.x + _tileSize), top,
+                                      Mathf.Max(max.z, o.z + _tileSize));
                 }
 
                 var bounds = new Bounds();

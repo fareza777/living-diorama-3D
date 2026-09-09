@@ -1,0 +1,39 @@
+{
+  "creatures": {
+    "goblin": {
+      "rig_id": "01a083b0-cc11-7420-bd5e-36bc485eafed",
+      "animations": {
+        "idle": "01a083b2-db6f-7658-86b7-393fadc3d82e",
+        "walk": "01a083b2-df58-7333-bafc-9b703f014ed7",
+        "run": "01a083b2-e2fa-735a-bb48-71fa87f1cd72",
+        "attack": "01a083b2-e648-7508-8992-e23ed7d16f57",
+        "hit": "01a083b2-e985-76b1-8a50-4f9abe6c9155",
+        "knockout": "01a083b2-ed06-71cf-95e1-0fb63c128a11",
+        "sleep": "01a083b2-f102-7566-a1d0-736be0122e88",
+        "eat": "01a083b2-f576-722b-82dc-470fa07e1a38",
+        "sneak": "01a083b2-f921-73e2-8d9f-4d6e2b4fdb66",
+        "socialise": "01a083b2-fcb0-7557-b1f1-19d0c912889e",
+        "celebrate": "01a083b4-499c-7649-b0cb-f5eb259faeb1"
+      }
+    },
+    "knight": {
+      "rig_id": "01a083b1-c320-743e-a106-447e03f49913",
+      "animations": {
+        "idle": "01a083b4-5285-7701-87c3-d8e1a699933f",
+        "walk": "01a083b4-574e-70eb-bb1d-375ff6c4a1d0",
+        "run": "01a083b4-5c0a-7190-bab0-eca7152c25f9",
+        "attack": "01a083b4-6135-766a-b367-a64e37e71f26",
+        "hit": "01a083b4-664b-7573-a444-a899e64976e1",
+        "knockout": "01a083b4-6af7-7332-90cc-1b64494618d0",
+        "sleep": "01a083b4-6fae-719a-bb95-3c94905e7568",
+        "eat": "01a083b4-74e3-71a9-b203-c202d2c24c80",
+        "sneak": "01a083b4-792a-7412-909b-79240e950f19",
+        "socialise": "01a083b5-8dc0-7136-8dd1-a96acbbe38e0",
+        "celebrate": "01a083b5-9125-729d-a864-5271370f3aac"
+      }
+    },
+    "skeleton": {
+      "rig_id": "01a083b1-f540-76a6-a417-58184ff3af9c"
+    }
+  }
+}

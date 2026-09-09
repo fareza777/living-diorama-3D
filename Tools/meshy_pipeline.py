@@ -238,7 +238,101 @@ def cmd_poll(only: list) -> None:
     print("[poll] timed out")
 
 
+# Meshy's texturing stage sometimes returns a nearly colourless atlas -- the goblin
+# and the wolf both came back as grey plastic while the slime came back vivid. These
+# prompts lead with the colour and say so twice, and the negative prompt names the
+# failure mode explicitly.
+RETEXTURE: dict[str, str] = {
+    "goblin": "vivid grass green skin, strongly saturated green, warm tan leather "
+              "loincloth, amber yellow eyes, pink inner ears",
+    "wolf": "rich warm grey brown fur with chestnut undertones, cream chest and muzzle, "
+            "bright amber eyes, strongly saturated",
+}
+
+RETEXTURE_STYLE = (
+    "hand-painted stylised game texture, bold flat colour blocks, high colour saturation, "
+    "vibrant, clean readable colour zones, soft gradient shading, no photographic detail"
+)
+
+RETEXTURE_NEGATIVE = (
+    "desaturated, greyscale, monochrome, washed out, colourless, grey, muddy, dull, "
+    "pale, text, watermark"
+)
+
+
+def cmd_retexture(only: list) -> None:
+    """Regenerate the albedo for creatures whose texture came back grey."""
+    state = load_state()
+
+    for cid, prompt in RETEXTURE.items():
+        if only and cid not in only:
+            continue
+
+        entry = state["creatures"].setdefault(cid, {})
+        if entry.get("retexture_id"):
+            print("[skip] %s: retexture already queued (%s)" % (cid, entry["retexture_id"]))
+            continue
+
+        source = entry.get("refine_id") or entry.get("preview_id")
+        if not source:
+            print("[warn] %s: no mesh to retexture" % cid)
+            continue
+
+        task = call("GET", "/v2/text-to-3d/" + source)
+        url = (task.get("model_urls") or {}).get("glb")
+        if not url:
+            print("[warn] %s: source mesh has no glb" % cid)
+            continue
+
+        res = call("POST", "/v1/retexture", {
+            "input_task_id": source,
+            "model_url": url,
+            "text_style_prompt": prompt + ". " + RETEXTURE_STYLE,
+            "negative_prompt": RETEXTURE_NEGATIVE,
+            "enable_original_uv": True,
+            "enable_pbr": False,
+        })
+        entry["retexture_id"] = res["result"]
+        print("[queued] %s: retexture %s" % (cid, entry["retexture_id"]))
+        save_state(state)
+
+
+def retexture_status(task_id: str) -> dict:
+    return call("GET", "/v1/retexture/" + task_id)
+
+
+def cmd_retexture_download(only: list) -> None:
+    """Replace the shipped GLB with the retextured one once it is ready."""
+    state = load_state()
+
+    for cid, entry in state["creatures"].items():
+        if only and cid not in only:
+            continue
+
+        task_id = entry.get("retexture_id")
+        if not task_id:
+            continue
+
+        task = retexture_status(task_id)
+        if task.get("status") != "SUCCEEDED":
+            print("[wait] %s: retexture %s %s%%" % (cid, task.get("status"), task.get("progress", 0)))
+            continue
+
+        urls = task.get("model_urls") or task.get("result") or {}
+        url = urls.get("glb") if isinstance(urls, dict) else None
+        if not url:
+            print("[warn] %s: retexture has no glb (%s)" % (cid, urls if not isinstance(urls, dict) else list(urls)))
+            continue
+
+        GLB_DIR.mkdir(parents=True, exist_ok=True)
+        out = GLB_DIR / (cid + ".glb")
+        urllib.request.urlretrieve(url, out)
+        print("[ok] %s -> %s (%d KB, retextured)" % (cid, out.name, out.stat().st_size // 1024))
+
+
 COMMANDS = {
+    "retexture": cmd_retexture,
+    "retexture-download": cmd_retexture_download,
     "preview": cmd_preview,
     "refine": cmd_refine,
     "download": cmd_download,

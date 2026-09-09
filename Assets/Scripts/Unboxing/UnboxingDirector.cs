@@ -81,8 +81,7 @@ namespace LivingDiorama.Unboxing
             _stage.SetBeam(0f);
             _stage.ChestRoot.localScale = Vector3.zero;
             _stage.ChestRoot.localRotation = Quaternion.identity;
-            _stage.LidRoot.localPosition = Diorama.ProceduralMeshes.ChestLidAnchor;
-            _stage.LidRoot.localRotation = Quaternion.identity;
+            _stage.ResetLid();
 
             _cameraSnapshot = _camera.Snapshot();
             _camera.SetMode(DioramaCamera.Mode.Scripted);
@@ -139,7 +138,7 @@ namespace LivingDiorama.Unboxing
                 _cameraSnapshot.yaw + 25f, 17f, 4.4f);
             yield return RiseAndMaterialise(result.Creature, 1.0f);
 
-            yield return GlowTo(0.6f, 0.6f);
+            yield return GlowTo(0f, 0.55f);
             StartCoroutine(FadeBeam(0.9f));
 
             // Legendary pulls hold longer before the card lands. The pause is the reward.
@@ -161,17 +160,20 @@ namespace LivingDiorama.Unboxing
 
         IEnumerator ScaleIn(Transform target, float duration)
         {
+            float rest = _stage.ChestScale;
             float t = 0f;
+
             while (t < duration)
             {
                 t += Time.unscaledDeltaTime;
                 float k = Mathf.Clamp01(t / duration);
                 // Overshoot then settle, so the box lands with weight.
                 float s = 1f + Mathf.Sin(k * Mathf.PI) * 0.18f;
-                target.localScale = Vector3.one * (Mathf.SmoothStep(0f, 1f, k) * s);
+                target.localScale = Vector3.one * (Mathf.SmoothStep(0f, 1f, k) * s * rest);
                 yield return null;
             }
-            target.localScale = Vector3.one;
+
+            target.localScale = Vector3.one * rest;
         }
 
         IEnumerator Hover(float duration)
@@ -229,24 +231,46 @@ namespace LivingDiorama.Unboxing
 
         float _currentGlow;
 
+        /// <summary>
+        /// The lid swings on its hinge first, then tears off.
+        ///
+        /// A lid that simply flies away reads as a box exploding; a lid that hinges open
+        /// and only then gives way reads as a chest being opened, which is the thing the
+        /// player paid for. The pivot is the real hinge on the model, so this works the
+        /// same on the generated chest and the modelled one.
+        /// </summary>
         IEnumerator FlingLid()
         {
             Transform lid = _stage.LidRoot;
             Vector3 start = lid.localPosition;
-            Vector3 spinAxis = new Vector3(UnityEngine.Random.Range(-1f, 1f), 0.4f, 1f).normalized;
+            Quaternion closed = lid.localRotation;
 
-            const float duration = 1.1f;
+            // --- swing ---------------------------------------------------------
+            const float swing = 0.42f;
             float t = 0f;
-
-            while (t < duration)
+            while (t < swing)
             {
                 t += Time.unscaledDeltaTime;
-                float k = t / duration;
+                float k = Mathf.Clamp01(t / swing);
+                // Fast off the latch, easing as it reaches the top of its arc.
+                float eased = 1f - Mathf.Pow(1f - k, 3f);
+                lid.localRotation = closed * Quaternion.Euler(-118f * eased, 0f, 0f);
+                yield return null;
+            }
 
-                // A little ballistic arc off the top of the chest.
-                float height = 1.9f * k - 2.6f * k * k;
-                lid.localPosition = start + new Vector3(0.35f * k, height, -0.15f * k);
-                lid.Rotate(spinAxis, 620f * Time.unscaledDeltaTime, Space.Self);
+            // --- tear off ------------------------------------------------------
+            Vector3 spinAxis = new Vector3(UnityEngine.Random.Range(-1f, 1f), 0.4f, 1f).normalized;
+            const float flight = 0.85f;
+            t = 0f;
+
+            while (t < flight)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = t / flight;
+
+                float height = 1.7f * k - 2.4f * k * k;
+                lid.localPosition = start + new Vector3(0.3f * k, height, -0.45f * k);
+                lid.Rotate(spinAxis, 540f * Time.unscaledDeltaTime, Space.Self);
 
                 yield return null;
             }
@@ -306,7 +330,7 @@ namespace LivingDiorama.Unboxing
 
             Transform model = _revealModel.transform;
             Vector3 start = new(0f, -0.25f, 0f);
-            Vector3 end = new(0f, 0.55f, 0f);
+            Vector3 end = new(0f, 0.30f, 0f);
             float t = 0f;
 
             while (t < duration)
@@ -358,7 +382,7 @@ namespace LivingDiorama.Unboxing
                 t += Time.unscaledDeltaTime;
                 float k = t / duration;
                 SetDissolve(k);
-                _stage.ChestRoot.localScale = Vector3.one * (1f - k);
+                _stage.ChestRoot.localScale = Vector3.one * (_stage.ChestScale * (1f - k));
                 yield return null;
             }
 
