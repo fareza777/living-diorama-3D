@@ -33,6 +33,7 @@ namespace LivingDiorama.EditorTools
         {
             EnsureFolders();
             UniversalRenderPipelineAsset urp = ConfigureRenderPipeline();
+            EnsureShadersAreShipped();
             ConfigurePanelSettings();
             ConfigureUiArtImport();
             ConfigurePlayerSettings();
@@ -120,6 +121,78 @@ namespace LivingDiorama.EditorTools
             QualitySettings.renderPipeline = urp;
 
             return urp;
+        }
+
+        /// <summary>
+        /// Force the game's shaders into the build.
+        ///
+        /// Every material here is created at runtime from Shader.Find, so nothing in the
+        /// project actually references the shader assets. Unity quite reasonably concludes
+        /// they are unused and strips them, and the game then starts with no ground, no
+        /// water and no creatures -- while working perfectly in the editor, where nothing
+        /// is stripped. Listing them as always-included is the fix.
+        /// </summary>
+        static void EnsureShadersAreShipped()
+        {
+            string[] required =
+            {
+                "Living Diorama/Creature",
+                "Living Diorama/Ground",
+                "Living Diorama/Foliage",
+                "Living Diorama/Water",
+                "Living Diorama/Additive",
+                "Living Diorama/Emote",
+            };
+
+            var settings = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
+                "ProjectSettings/GraphicsSettings.asset");
+
+            if (settings == null)
+            {
+                Debug.LogError("[ProjectConfigurator] could not open GraphicsSettings; " +
+                               "shaders may be stripped from the build");
+                return;
+            }
+
+            var serialized = new SerializedObject(settings);
+            SerializedProperty list = serialized.FindProperty("m_AlwaysIncludedShaders");
+            if (list == null)
+            {
+                Debug.LogError("[ProjectConfigurator] m_AlwaysIncludedShaders not found");
+                return;
+            }
+
+            var existing = new HashSet<string>();
+            for (int i = 0; i < list.arraySize; i++)
+            {
+                if (list.GetArrayElementAtIndex(i).objectReferenceValue is Shader shader)
+                {
+                    existing.Add(shader.name);
+                }
+            }
+
+            int added = 0;
+            foreach (string name in required)
+            {
+                if (existing.Contains(name)) continue;
+
+                Shader shader = Shader.Find(name);
+                if (shader == null)
+                {
+                    Debug.LogError($"[ProjectConfigurator] shader '{name}' does not exist");
+                    continue;
+                }
+
+                list.InsertArrayElementAtIndex(list.arraySize);
+                list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = shader;
+                added++;
+            }
+
+            if (added == 0) return;
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[ProjectConfigurator] added {added} shader(s) to the always-included list");
         }
 
         static void SetBool(SerializedObject serialized, string field, bool value)

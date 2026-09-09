@@ -133,9 +133,10 @@ namespace LivingDiorama.Unboxing
             // ---- the reveal --------------------------------------------------
             yield return BuildRevealModel(result.Creature);
 
-            // Pull back slightly as the creature rises: the shot opens up to make room
-            // for it, rather than the creature growing inside a fixed frame.
-            _camera.SetScriptedShot(_stage.StagePosition, _cameraSnapshot.yaw + 25f, 17f, 4.0f);
+            // Pull back and lift as the creature rises: the shot opens up to make room for
+            // it, rather than the creature growing inside a fixed frame.
+            _camera.SetScriptedShot(_stage.StagePosition + Vector3.up * 0.55f,
+                _cameraSnapshot.yaw + 25f, 17f, 4.4f);
             yield return RiseAndMaterialise(result.Creature, 1.0f);
 
             yield return GlowTo(0.6f, 0.6f);
@@ -281,8 +282,16 @@ namespace LivingDiorama.Unboxing
             _revealModel = task.IsCompletedSuccessfully ? task.Result : null;
             if (_revealModel == null) yield break;
 
-            // Present it larger than life; this is a portrait, not a diorama resident.
-            float scale = 2.2f / Mathf.Max(0.2f, definition.bodyHeight);
+            // Present every species at one height, whatever its size in the diorama, so a
+            // slime and a dragon get the same portrait framing. The factory has already
+            // normalised the model to its body height, so this scales from there.
+            //
+            // The number matters: the reveal shot sits about four units back with a 42
+            // degree field of view, which is roughly three units of visible height. At
+            // 1.15 the creature fills a little over a third of the frame and the chest
+            // stays in shot beneath it. Larger and the camera ends up inside the model.
+            const float portraitHeight = 1.15f;
+            float scale = portraitHeight / Mathf.Max(0.2f, definition.bodyHeight);
             _revealModel.transform.localScale *= scale;
             SetDissolve(1f);
         }
@@ -307,7 +316,10 @@ namespace LivingDiorama.Unboxing
                 float eased = 1f - Mathf.Pow(1f - k, 3f);
 
                 model.localPosition = Vector3.Lerp(start, end, eased);
-                model.localRotation = Quaternion.Euler(0f, 180f + eased * 200f, 0f);
+                // A full turn on the way up, landing back where it started so the creature
+                // ends the shot facing the player rather than at whatever angle the sweep
+                // happened to stop on.
+                model.localRotation = Quaternion.Euler(0f, 180f + eased * 360f, 0f);
 
                 // Materialise a touch ahead of the rise so it is solid before it settles.
                 SetDissolve(Mathf.Clamp01(1f - k * 1.35f));

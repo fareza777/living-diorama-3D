@@ -244,15 +244,34 @@ namespace LivingDiorama.Core
             }
         }
 
+        /// <summary>
+        /// Build a material, surviving a missing shader.
+        ///
+        /// Shader.Find returns null for anything stripped from the build, and passing null
+        /// to the Material constructor throws -- which used to take the whole world build
+        /// down with it, leaving a black screen and no diorama. The project configurator
+        /// keeps these shaders in the always-included list precisely so this cannot
+        /// happen, but a hard crash is far too steep a price for a stripping mistake.
+        /// </summary>
         static Material MakeMaterial(string shaderName, string name)
         {
             Shader shader = Shader.Find(shaderName);
+
             if (shader == null)
             {
-                Debug.LogError($"[GameBootstrap] missing shader '{shaderName}'");
-                shader = Shader.Find("Universal Render Pipeline/Lit");
+                Debug.LogError($"[GameBootstrap] shader '{shaderName}' is missing from this " +
+                               "build; run Living Diorama > Configure Project to restore it");
+
+                foreach (string fallback in new[] { "Universal Render Pipeline/Lit", "Sprites/Default" })
+                {
+                    shader = Shader.Find(fallback);
+                    if (shader != null) break;
+                }
             }
-            return new Material(shader) { name = name };
+
+            return shader != null
+                ? new Material(shader) { name = name }
+                : null;
         }
 
         void BuildSimulation()

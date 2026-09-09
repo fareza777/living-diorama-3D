@@ -89,11 +89,18 @@ namespace LivingDiorama.Presentation
         /// Toggled from the HUD; also what the idle timer falls back into.</summary>
         public bool Turntable { get; set; }
 
-        /// <summary>Aim the camera at a specific presentation setup and let the existing
-        /// damping carry it there. Used by the unboxing sequence.</summary>
+        /// <summary>
+        /// Aim the camera at a specific presentation setup and let the existing damping
+        /// carry it there. Used by the unboxing sequence.
+        ///
+        /// The height is honoured here, unlike everywhere else. Interactive framing pins
+        /// the pivot to the ground because the diorama is on the ground; the reveal stage
+        /// is not, and flattening its pivot pointed the camera at empty terrain fourteen
+        /// units below the chest.
+        /// </summary>
         public void SetScriptedShot(Vector3 pivot, float yaw, float pitch, float distance)
         {
-            _targetPivot = new Vector3(pivot.x, 0f, pivot.z);
+            _targetPivot = pivot;
             _targetYaw = yaw;
             _targetPitch = Mathf.Clamp(pitch, _minPitch, _maxPitch);
             _targetDistance = Mathf.Clamp(distance, 1.5f, _maxDistance);

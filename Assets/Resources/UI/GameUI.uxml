@@ -41,10 +41,10 @@
                 <ui:Label name="population-label" class="hud__clock-label" text="0 / 5 creatures" />
 
                 <ui:VisualElement class="row" style="margin-top: 8px;">
-                    <ui:Button name="btn-turntable" class="button button--icon button--ghost" text="&#8635;"
+                    <ui:Button name="btn-turntable" class="button button--icon button--ghost" text="360"
                                tooltip="Turntable" />
                     <ui:VisualElement style="width: 6px;" />
-                    <ui:Button name="btn-settings" class="button button--icon button--ghost" text="&#9881;"
+                    <ui:Button name="btn-settings" class="button button--icon button--ghost" text="..."
                                tooltip="Settings" />
                 </ui:VisualElement>
             </ui:VisualElement>

@@ -32,7 +32,7 @@ namespace LivingDiorama.EditorTools
             bool aab = args.Contains("-aab");
             bool release = args.Contains("-release");
 
-            BuildReport report = Build(output, aab, release);
+            BuildReport report = Build(output, aab, release, args.Contains("-withX64"));
 
             // Batch mode has to exit with a failing code or CI will happily publish nothing.
             if (report == null || report.summary.result != BuildResult.Succeeded)
@@ -47,12 +47,20 @@ namespace LivingDiorama.EditorTools
             return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
         }
 
-        static BuildReport Build(string outputPath, bool aab, bool release)
+        static BuildReport Build(string outputPath, bool aab, bool release, bool withX64 = false)
         {
             // Content and project settings are generated, so a build always regenerates
             // them first. A build that silently used stale content would be worse than
             // a slow one.
             ProjectConfigurator.RebuildEverything();
+
+            // Shipping builds are ARM64 only: it is what the Play Store requires and it
+            // halves the binary. x86-64 exists purely so the game can be installed on a
+            // desktop emulator, which is the only way to exercise it without a phone.
+            // This has to come after the reconfigure, which resets the architecture list.
+            PlayerSettings.Android.targetArchitectures = withX64
+                ? AndroidArchitecture.ARM64 | AndroidArchitecture.X86_64
+                : AndroidArchitecture.ARM64;
 
             EditorUserBuildSettings.buildAppBundle = aab;
             EditorUserBuildSettings.androidBuildType = release

@@ -441,9 +441,12 @@ namespace LivingDiorama.UI
                 _revealBadge.AddToClassList("hidden");
             }
 
+            // Show the card in the same frame it is asked for. Deferring the visible class
+            // to a scheduled callback bought a nicer slide-in, at the cost of the reward
+            // card being invisible whenever the scheduler was not running -- which is the
+            // one thing this screen may never get wrong.
             _revealLayer.RemoveFromClassList("hidden");
-            _revealCard.RemoveFromClassList("reveal-card--in");
-            _revealCard.schedule.Execute(() => _revealCard.AddToClassList("reveal-card--in")).ExecuteLater(30);
+            _revealCard.AddToClassList("reveal-card--in");
 
             if (result.Rarity >= Data.Rarity.Epic) NarrateOnce("milestone_legendary");
             RefreshAll();

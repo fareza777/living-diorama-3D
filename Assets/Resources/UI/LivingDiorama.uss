@@ -132,6 +132,7 @@
     padding-top: 6px;
     padding-bottom: 6px;
     margin-right: 8px;
+    flex-shrink: 0;
 }
 
 .chip__icon {
@@ -164,6 +165,7 @@
     -unity-font-style: bold;
     padding-left: 18px;
     padding-right: 18px;
+    flex-shrink: 0;
     transition-property: background-color, scale;
     transition-duration: 0.12s;
 }
@@ -213,11 +215,15 @@
 
 .hud__clock {
     align-items: flex-end;
+    flex-shrink: 0;
+    max-width: 46%;
 }
 
 .hud__clock-label {
     font-size: 13px;
     color: var(--ink-dim);
+    -unity-text-align: middle-right;
+    white-space: nowrap;
 }
 
 .hud__rate {
@@ -228,6 +234,7 @@
 .hud__bottom {
     flex-direction: row;
     align-items: flex-end;
+    flex-wrap: wrap;
 }
 
 .level {

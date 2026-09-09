@@ -71,24 +71,44 @@ namespace LivingDiorama.UI
             }
         }
 
-        /// <summary>Prepend an icon to a text button, turning it into a row.</summary>
+        /// <summary>
+        /// Put an icon next to a button's label.
+        ///
+        /// A Button paints its own text across its whole box rather than through a child,
+        /// so simply inserting an icon lays it straight over the words. The text has to be
+        /// moved into a real child label first, and only then can the two sit side by side.
+        /// </summary>
         public static void PrefixIcon(Button button, string spriteKey, float size = 22f)
         {
             Sprite sprite = Sprite(spriteKey);
             if (button == null || sprite == null) return;
             if (button.Q<VisualElement>("skin-icon") != null) return;
 
+            string caption = button.text;
+            button.text = string.Empty;
+
             var icon = new VisualElement { name = "skin-icon", pickingMode = PickingMode.Ignore };
             icon.style.backgroundImage = new StyleBackground(sprite);
             icon.style.width = size;
             icon.style.height = size;
-            icon.style.marginRight = 8;
+            icon.style.marginRight = 7;
             icon.style.flexShrink = 0;
+
+            var label = new Label(caption) { name = "skin-label", pickingMode = PickingMode.Ignore };
+            label.style.unityFontStyleAndWeight = FontStyle.Bold;
+            label.style.fontSize = button.resolvedStyle.fontSize > 0
+                ? button.resolvedStyle.fontSize
+                : 15f;
+            label.style.color = button.resolvedStyle.color;
+            label.style.flexShrink = 0;
 
             button.style.flexDirection = FlexDirection.Row;
             button.style.alignItems = Align.Center;
             button.style.justifyContent = Justify.Center;
-            button.Insert(0, icon);
+            button.style.flexShrink = 0;
+
+            button.Add(icon);
+            button.Add(label);
         }
 
         /// <summary>
@@ -118,7 +138,11 @@ namespace LivingDiorama.UI
             foreach (Button button in root.Query<Button>(className: "button--ghost").Build())
             {
                 ApplyPlate(button, "button_ghost");
-                button.style.color = new Color(0.95f, 0.90f, 0.80f);
+                // The generated secondary plate came out lighter than its brief, and pale
+                // text on it is unreadable. Tinting the image down is a one-line fix that
+                // does not require regenerating the art or inverting the type colour.
+                button.style.unityBackgroundImageTintColor = new Color(0.44f, 0.41f, 0.47f);
+                button.style.color = new Color(0.96f, 0.93f, 0.86f);
             }
 
             SkinCurrencyIcons(root);
