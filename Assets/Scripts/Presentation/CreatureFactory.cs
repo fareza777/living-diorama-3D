@@ -184,6 +184,25 @@ namespace LivingDiorama.Presentation
                 -bounds.center.z * scale);
         }
 
+        /// <summary>
+        /// True world-space bounds of a creature instance, skinned meshes included.
+        ///
+        /// Public because anything that has to fit a creature into a frame needs the same
+        /// answer, and getting it wrong is not obvious: Renderer.bounds on a skinned mesh
+        /// is a padded culling box, so measuring it puts the camera too far back and the
+        /// creature ends up a third of the size it should be.
+        /// </summary>
+        public static bool TryGetWorldBounds(GameObject instance, out Bounds bounds)
+        {
+            bounds = default;
+            if (instance == null) return false;
+
+            if (!TryGetLocalBounds(instance, out Bounds local)) return false;
+
+            bounds = TransformBounds(local, instance.transform.localToWorldMatrix);
+            return true;
+        }
+
         static bool TryGetLocalBounds(GameObject instance, out Bounds bounds)
         {
             var renderers = instance.GetComponentsInChildren<Renderer>(true);

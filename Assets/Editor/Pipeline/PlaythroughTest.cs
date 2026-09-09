@@ -132,6 +132,22 @@ namespace LivingDiorama.EditorTools
 
         // ---- the script -----------------------------------------------------
 
+        /// <summary>Click the first entry of a built list. Collection cards are plain
+        /// elements listening for ClickEvent rather than Buttons, so they are poked with a
+        /// synthesised event instead of the Clickable the button helper uses.</summary>
+        static void ClickFirstCard(string containerName)
+        {
+            VisualElement container = Root?.Q<VisualElement>(containerName);
+            if (container == null || container.childCount == 0)
+            {
+                throw new System.Exception($"[Playthrough] nothing to click in '{containerName}'");
+            }
+
+            using var evt = ClickEvent.GetPooled();
+            evt.target = container[0];
+            container[0].SendEvent(evt);
+        }
+
         static GameUI Ui => UnityEngine.Object.FindFirstObjectByType<GameUI>();
         static UIDocument Document => UnityEngine.Object.FindFirstObjectByType<UIDocument>();
         static VisualElement Root => Document != null ? Document.rootVisualElement : null;
@@ -225,9 +241,29 @@ namespace LivingDiorama.EditorTools
             },
             new Step
             {
+                Name = "tapping a species opens its turntable",
+                Act = () => ClickFirstCard("collection-grid-inner"),
+                Until = () => Visible("collection-detail"),
+                Capture = "05b_turntable",
+            },
+            new Step
+            {
                 Name = "collection closes",
                 Act = () => Click("btn-collection-close"),
                 Until = () => !Visible("modal-collection"),
+            },
+            new Step
+            {
+                Name = "the chronicle lists what there is to find",
+                Act = () => Click("btn-chronicle"),
+                Until = () => Visible("modal-chronicle") && CountChildren("chronicle-list") >= 1,
+                Capture = "05c_chronicle",
+            },
+            new Step
+            {
+                Name = "chronicle closes",
+                Act = () => Click("btn-chronicle-close"),
+                Until = () => !Visible("modal-chronicle"),
             },
             new Step
             {

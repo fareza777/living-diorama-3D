@@ -244,14 +244,24 @@
     color: var(--teal);
 }
 
+/* The secondary action, not a disabled one.
+ *
+ * These were nearly black next to a bright gold primary, and measured on a phone the
+ * label contrast was fine -- 14:1 -- while the buttons still read as greyed out. The
+ * problem was never legibility of the text; it was that the plate looked switched off.
+ * A lifted face and a brighter rim say "you can press this". */
 .button--ghost {
-    background-color: rgb(30, 28, 34);
-    border-color: rgba(196, 150, 78, 0.45);
-    color: rgb(236, 230, 220);
+    background-color: rgb(62, 55, 48);
+    border-color: rgba(226, 182, 106, 0.75);
+    color: rgb(246, 240, 228);
 }
 
 .button--ghost:hover {
-    background-color: rgb(42, 39, 47);
+    background-color: rgb(78, 69, 60);
+}
+
+.button--ghost:active {
+    background-color: rgb(48, 42, 37);
 }
 
 .button--mini {
@@ -963,4 +973,98 @@
     font-size: 17px;
     color: var(--ink);
     min-width: 190px;
+}
+
+
+/* ------------------------------------------------------------- chronicle */
+
+/* A witnessed moment reads like a page from a field journal: a title, the thing that
+   happened, and when. An unseen one is a locked page with a nudge on it. */
+.moment {
+    flex-direction: row;
+    align-items: flex-start;
+    background-color: var(--panel);
+    border-radius: var(--radius-sm);
+    border-width: 1px;
+    border-color: var(--stroke);
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.moment--found {
+    border-color: rgba(226, 182, 106, 0.55);
+    background-color: rgba(38, 32, 22, 0.92);
+}
+
+.moment__seal {
+    width: 46px;
+    height: 46px;
+    border-radius: 23px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.18);
+    background-color: rgba(255, 255, 255, 0.05);
+    margin-right: 14px;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    font-size: 22px;
+    color: var(--ink-faint);
+}
+
+.moment__body {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.moment__title {
+    font-size: 18px;
+    -unity-font-definition: resource("Fonts/Cinzel-Bold");
+    color: rgb(246, 226, 186);
+    white-space: normal;
+}
+
+.moment__title--locked {
+    color: var(--ink-faint);
+}
+
+.moment__text {
+    font-size: 15px;
+    color: var(--ink-dim);
+    white-space: normal;
+    margin-top: 4px;
+}
+
+.moment__reward {
+    font-size: 14px;
+    color: var(--gold);
+    margin-top: 6px;
+}
+
+/* A Chronicle entry is not the same as a passing event, so it does not look like one. */
+.toast--moment {
+    background-color: rgba(58, 44, 18, 0.94);
+    border-color: rgba(255, 199, 88, 0.85);
+    color: rgb(255, 236, 196);
+}
+
+/* ------------------------------------------------------------- viewport */
+
+/* The creature itself, rendered live and turnable. A collection you can only see as
+   thumbnails is a spreadsheet; this is the reward for having built them in 3D. */
+.viewport {
+    height: 250px;
+    background-size: 100% 100%;
+    border-radius: var(--radius-sm);
+    border-width: 1px;
+    border-color: rgba(226, 182, 106, 0.45);
+    background-color: rgb(13, 14, 23);
+    margin-bottom: 12px;
+    justify-content: flex-end;
+    align-items: center;
+    overflow: hidden;
+}
+
+.viewport__hint {
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
 }

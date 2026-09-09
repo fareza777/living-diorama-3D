@@ -42,7 +42,14 @@ namespace LivingDiorama.Core
             _sim = sim;
             _pacing = pacing;
             _rng = rng ?? new System.Random();
+
+            Chronicle = new ChronicleService(state, db, sim != null ? sim.Clock : null);
         }
+
+        /// <summary>The record of what the diorama has been caught doing.</summary>
+        public ChronicleService Chronicle { get; }
+
+        public void Dispose() => Chronicle?.Dispose();
 
         // ---- boxes ----------------------------------------------------------
 

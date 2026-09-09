@@ -17,6 +17,7 @@ namespace LivingDiorama.Data
         public List<CreatureDefinition> creatures = new();
         public List<BiomeDefinition> biomes = new();
         public List<MysteryBoxDefinition> boxes = new();
+        public List<MomentDefinition> moments = new();
 
         [Header("Rules")]
         public RelationRuleSet relations;

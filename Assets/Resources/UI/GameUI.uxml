@@ -43,6 +43,9 @@
                 </ui:VisualElement>
 
                 <ui:VisualElement class="row" style="margin-top: 8px;">
+                    <ui:Button name="btn-chronicle" class="button button--ghost button--mini"
+                               text="Chronicle 0/0" tooltip="What your diorama has been caught doing" />
+                    <ui:VisualElement style="width: 6px;" />
                     <ui:Button name="btn-turntable" class="button button--ghost button--mini" text="SPIN"
                                tooltip="Turntable" />
                     <ui:VisualElement style="width: 6px;" />
@@ -112,6 +115,9 @@
 
             <ui:VisualElement name="collection-detail" class="panel panel--raised hidden"
                               style="margin-top: 10px;">
+                <ui:VisualElement name="collection-viewport" class="viewport">
+                    <ui:Label class="viewport__hint" text="drag to turn  ·  pinch to zoom" />
+                </ui:VisualElement>
                 <ui:Label name="collection-detail-name" class="inspector__name" text="" />
                 <ui:Label name="collection-detail-flavour" class="modal__subtitle" text="" />
                 <ui:Label name="collection-detail-tags" class="level__label" text="" />
@@ -122,6 +128,18 @@
             </ui:VisualElement>
 
             <ui:Button name="btn-collection-close" class="button button--ghost" text="Close"
+                       style="margin-top: 12px;" />
+        </ui:VisualElement>
+
+        <!-- ===================================================== chronicle -->
+        <ui:VisualElement name="modal-chronicle" class="modal__card hidden">
+            <ui:Label class="modal__title" text="The Chronicle" />
+            <ui:Label name="chronicle-progress" class="modal__subtitle"
+                      text="0 of 0 witnessed" />
+
+            <ui:ScrollView name="chronicle-list" style="max-height: 560px;" />
+
+            <ui:Button name="btn-chronicle-close" class="button button--ghost" text="Close"
                        style="margin-top: 12px;" />
         </ui:VisualElement>
 

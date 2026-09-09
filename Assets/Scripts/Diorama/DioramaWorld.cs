@@ -38,7 +38,6 @@ namespace LivingDiorama.Diorama
         Material _foliageMaterial;
         Material _waterMaterial;
 
-        MaterialPropertyBlock _waterBlock;
 
         static readonly int ShallowId = Shader.PropertyToID("_ShallowColor");
         static readonly int DeepId = Shader.PropertyToID("_DeepColor");
@@ -61,7 +60,6 @@ namespace LivingDiorama.Diorama
             _propMaterial = prop;
             _foliageMaterial = foliage;
             _waterMaterial = water;
-            _waterBlock = new MaterialPropertyBlock();
             _pedestal = DioramaPedestal.Create(transform, prop);
         }
 
@@ -217,24 +215,48 @@ namespace LivingDiorama.Diorama
             mr.receiveShadows = true;
         }
 
+        readonly Dictionary<BiomeDefinition, Material> _waterMaterials = new(8);
+
+        Material WaterMaterialFor(BiomeDefinition biome)
+        {
+            if (_waterMaterials.TryGetValue(biome, out Material cached) && cached != null) return cached;
+
+            var material = new Material(_waterMaterial) { name = $"Water_{biome.id}" };
+            material.SetColor(ShallowId, biome.waterShallow);
+            material.SetColor(DeepId, biome.waterDeep);
+
+            _waterMaterials[biome] = material;
+            return material;
+        }
+
         void BuildWater(DioramaTile tile)
         {
             var go = new GameObject("Water");
             go.transform.SetParent(tile.Root.transform, false);
             go.transform.localPosition = new Vector3(0f, tile.Biome.waterLevel, 0f);
 
-            go.AddComponent<MeshFilter>().sharedMesh = TileMeshBuilder.BuildWater(_tileSize);
+            Mesh mesh = TileMeshBuilder.BuildWater(tile.Biome, TileOrigin(tile.Coord), _tileSize, _seed);
+            if (mesh == null)
+            {
+                // No cell on this tile is under water after all.
+                Destroy(go);
+                return;
+            }
+
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
 
             var mr = go.AddComponent<MeshRenderer>();
             mr.sharedMaterial = _waterMaterial;
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.receiveShadows = false;
 
-            // Per-biome tint without a material per biome.
-            _waterBlock.Clear();
-            _waterBlock.SetColor(ShallowId, tile.Biome.waterShallow);
-            _waterBlock.SetColor(DeepId, tile.Biome.waterDeep);
-            mr.SetPropertyBlock(_waterBlock);
+            // A material per biome, not a property block.
+            //
+            // The water shader is SRP Batcher compatible, and the batcher ignores
+            // per-renderer property blocks -- so every river was drawn in the material's
+            // default colours rather than its own biome's. There are a handful of biomes,
+            // so a material each costs nothing.
+            mr.sharedMaterial = WaterMaterialFor(tile.Biome);
         }
 
         /// <summary>

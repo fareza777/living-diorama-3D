@@ -30,6 +30,16 @@ MonoBehaviour:
   boxes:
   - {fileID: 11400000, guid: 33ec70e5ef201734fb61058668847186, type: 2}
   - {fileID: 11400000, guid: bd4c00b3b622ef64d852768b369f2834, type: 2}
+  moments:
+  - {fileID: 11400000, guid: f07a8d978ee5c39458933a3a0e34b009, type: 2}
+  - {fileID: 11400000, guid: 93be4ad076808514bb4b4c11886c732e, type: 2}
+  - {fileID: 11400000, guid: 20873fbdbb90a5242929a68d682ac2ac, type: 2}
+  - {fileID: 11400000, guid: f1ac104175521b946b94457a7d3b5d1a, type: 2}
+  - {fileID: 11400000, guid: c7b0dc37ad9e0414c9cc4b02936fabc2, type: 2}
+  - {fileID: 11400000, guid: 762168db04f06184d9e547439fe7a9f4, type: 2}
+  - {fileID: 11400000, guid: 2eeb9c080e2ee44439197965caa07a0c, type: 2}
+  - {fileID: 11400000, guid: 1561d3d330c53234488455a97f4e6868, type: 2}
+  - {fileID: 11400000, guid: 07a3d432dead22b479d8336157abb89e, type: 2}
   relations: {fileID: 11400000, guid: 67e9de03011f6c84284ac491b62bfb3d, type: 2}
   simulation: {fileID: 11400000, guid: 6bad44addeb736545ade09d6378cab4b, type: 2}
   progression: {fileID: 11400000, guid: 18b74999538b5444abfcb7fe6a9fbcbf, type: 2}

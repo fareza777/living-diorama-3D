@@ -37,6 +37,11 @@ namespace LivingDiorama.Save
         public List<SavedTile> tiles = new();
         public List<SavedCreature> creatures = new();
         public List<string> discoveredSpecies = new();
+
+        /// <summary>Moments the player has actually witnessed, by id. The Chronicle is
+        /// progress in its own right, so it has to survive a reinstall like anything
+        /// else the player earned.</summary>
+        public List<string> witnessedMoments = new();
         public List<SavedBox> boxes = new();
         public SavedStats stats = new();
 

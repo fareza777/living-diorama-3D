@@ -47,6 +47,9 @@ namespace LivingDiorama.UI
 
         BoxPanel _boxPanel;
         CollectionPanel _collectionPanel;
+        ChroniclePanel _chroniclePanel;
+        CreatureStage _creatureStage;
+        Button _chronicleButton;
         ExpandPanel _expandPanel;
         InspectorPanel _inspector;
         WelcomePanel _welcome;
@@ -122,6 +125,7 @@ namespace LivingDiorama.UI
         {
             _boxPanel = new BoxPanel(_root.Q<VisualElement>("modal-box"), _game, this);
             _collectionPanel = new CollectionPanel(_root.Q<VisualElement>("modal-collection"), _game, this);
+            _chroniclePanel = new ChroniclePanel(_root.Q<VisualElement>("modal-chronicle"), _game, this);
             _expandPanel = new ExpandPanel(_root.Q<VisualElement>("modal-expand"), _game, this);
             _welcome = new WelcomePanel(_root.Q<VisualElement>("modal-welcome"), _game, this);
             _inspector = new InspectorPanel(_root.Q<VisualElement>("inspector"), _game);
@@ -141,6 +145,11 @@ namespace LivingDiorama.UI
             _root.Q<Button>("btn-box").clicked += () => { Click(); OpenModal(_boxPanel.Root, _boxPanel.Refresh); };
             _root.Q<Button>("btn-collection").clicked += () => { Click(); OpenModal(_collectionPanel.Root, _collectionPanel.Refresh); };
             _root.Q<Button>("btn-expand").clicked += () => { Click(); OpenModal(_expandPanel.Root, _expandPanel.Refresh); };
+
+            _chronicleButton = _root.Q<Button>("btn-chronicle");
+            _chronicleButton.clicked += () => { Click(); OpenModal(_chroniclePanel.Root, _chroniclePanel.Refresh); };
+            _game.Chronicle.MomentWitnessed += OnMomentWitnessed;
+            RefreshChronicleButton();
             _root.Q<Button>("btn-settings").clicked += () => { Click(); OpenSettings(); };
 
             _turntableButton.clicked += () =>
@@ -211,6 +220,7 @@ namespace LivingDiorama.UI
             {
                 _audio.NarrationStarted -= ShowSubtitle;
                 _audio.NarrationFinished -= HideSubtitle;
+                if (_game?.Chronicle != null) _game.Chronicle.MomentWitnessed -= OnMomentWitnessed;
             }
 
             if (_unboxing != null)
@@ -296,6 +306,40 @@ namespace LivingDiorama.UI
             }
         }
 
+        /// <summary>A moment is the one reward the player cannot buy, so it gets the
+        /// narrator, a toast in its own colour, and the counter ticking up.</summary>
+        void OnMomentWitnessed(Data.MomentDefinition moment)
+        {
+            if (moment == null) return;
+
+            var toast = new Label($"Chronicle — {moment.title}");
+            toast.AddToClassList("toast");
+            toast.AddToClassList("toast--moment");
+            _toasts.Add(toast);
+            while (_toasts.childCount > MaxToasts) _toasts.RemoveAt(0);
+            StartCoroutine(FadeToast(toast));
+
+            _audio?.PlaySfx("reward");
+            RefreshChronicleButton();
+            RefreshAll();
+        }
+
+        void RefreshChronicleButton()
+        {
+            if (_chronicleButton == null || _game?.Chronicle == null) return;
+
+            _chronicleButton.text =
+                $"Chronicle {_game.Chronicle.WitnessedCount}/{_game.Chronicle.All.Count}";
+        }
+
+        /// <summary>Hand the collection its turntable. Separate from Initialise because the
+        /// stage needs the creature factory, which the world builds after the UI.</summary>
+        public void AttachCreatureStage(CreatureStage stage)
+        {
+            _creatureStage = stage;
+            _collectionPanel?.AttachStage(stage);
+        }
+
         void OpenSettings()
         {
             OpenModal(_root.Q<VisualElement>("modal-settings"), _settings.Refresh);
@@ -313,6 +357,8 @@ namespace LivingDiorama.UI
 
             // The earning rate is derived from every creature's wellbeing, so recomputing
             // it every frame would be wasteful for a number that changes slowly.
+            if (_openModals.Contains(_collectionPanel.Root)) _collectionPanel.Tick();
+
             _hudRefreshTimer -= Time.deltaTime;
             if (_hudRefreshTimer <= 0f)
             {

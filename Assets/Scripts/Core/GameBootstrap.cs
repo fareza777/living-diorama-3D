@@ -331,6 +331,7 @@ namespace LivingDiorama.Core
 
             _ui = uiGo.AddComponent<GameUI>();
             _ui.Initialise(document, _controller, _economy, _sim, _camera, _audio, _unboxing, EraseSave);
+            _ui.AttachCreatureStage(UI.CreatureStage.Create(_factory));
 
             _world.TileBuilt += OnTileBuilt;
         }

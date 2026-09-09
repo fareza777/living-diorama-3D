@@ -13,7 +13,7 @@ namespace LivingDiorama.Presentation
         static Shader _shader;
 
         MeshRenderer _renderer;
-        MaterialPropertyBlock _block;
+        Material _material;
         Transform _camera;
 
         float _remaining;
@@ -43,13 +43,25 @@ namespace LivingDiorama.Presentation
             var filter = gameObject.AddComponent<MeshFilter>();
             filter.sharedMesh = _quad;
 
+            // Each bubble owns its material rather than sharing one and overriding the
+            // icon per renderer.
+            //
+            // A property block was the obvious way to do this and it silently does
+            // nothing here: the shader declares a UnityPerMaterial buffer, which makes it
+            // SRP Batcher compatible, and the batcher ignores per-renderer property
+            // blocks. Every creature therefore drew the shader's default white texture --
+            // a blank square over its head, whatever it was actually feeling.
+            _material = new Material(_shader != null ? _shader : Shader.Find("Sprites/Default"))
+            {
+                name = "EmoteIcon",
+            };
+
             _renderer = gameObject.AddComponent<MeshRenderer>();
-            _renderer.sharedMaterial = new Material(_shader != null ? _shader : Shader.Find("Sprites/Default"));
+            _renderer.sharedMaterial = _material;
             _renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _renderer.receiveShadows = false;
             _renderer.enabled = false;
 
-            _block = new MaterialPropertyBlock();
             if (Camera.main != null) _camera = Camera.main.transform;
         }
 
@@ -82,10 +94,13 @@ namespace LivingDiorama.Presentation
             _remaining = Mathf.Max(_remaining, seconds);
             _renderer.enabled = true;
 
-            _block.Clear();
-            _block.SetTexture(MainTexId, EmoteIcons.For(mood));
-            _block.SetColor(ColorId, Color.white);
-            _renderer.SetPropertyBlock(_block);
+            _material.SetTexture(MainTexId, EmoteIcons.For(mood));
+            _material.SetColor(ColorId, Color.white);
+        }
+
+        void OnDestroy()
+        {
+            if (_material != null) Destroy(_material);
         }
 
         public void Hide() => _remaining = 0f;

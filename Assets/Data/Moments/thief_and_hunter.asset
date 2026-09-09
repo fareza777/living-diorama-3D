@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 817f4cb32eba73b4a9305b5cbba65e55, type: 3}
+  m_Name: thief_and_hunter
+  m_EditorClassIdentifier: LivingDiorama.Runtime::LivingDiorama.Data.MomentDefinition
+  id: thief_and_hunter
+  title: The Thief and the Hunter
+  flavour: The goblin had barely finished chewing before the wolf came through the
+    ferns. It did not get to keep the apple.
+  hint: A hunter and a thief in the same small world will eventually meet.
+  trigger: 5
+  actorSpecies: wolf
+  targetSpecies: goblin
+  time: 0
+  essence: 60
+  prestige: 2

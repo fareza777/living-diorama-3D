@@ -22,8 +22,13 @@ namespace LivingDiorama.UI
         readonly VisualElement _detail;
         readonly Label _detailName, _detailFlavour, _detailTags;
         readonly Button _placeButton;
+        readonly VisualElement _viewport;
 
         CreatureDefinition _selected;
+        CreatureStage _stage;
+
+        Vector2 _dragFrom;
+        bool _dragging;
 
         public VisualElement Root => _root;
 
@@ -40,9 +45,61 @@ namespace LivingDiorama.UI
             _detailFlavour = root.Q<Label>("collection-detail-flavour");
             _detailTags = root.Q<Label>("collection-detail-tags");
             _placeButton = root.Q<Button>("btn-place");
+            _viewport = root.Q<VisualElement>("collection-viewport");
+
+            HookViewport();
 
             _placeButton.clicked += OnPlace;
             root.Q<Button>("btn-collection-close").clicked += ui.CloseModals;
+        }
+
+        /// <summary>Give the panel the turntable to draw into. Supplied after construction
+        /// because the stage needs the creature factory, which the world owns.</summary>
+        public void AttachStage(CreatureStage stage)
+        {
+            _stage = stage;
+            if (_stage != null) _viewport.style.backgroundImage = Background.FromRenderTexture(_stage.Texture);
+        }
+
+        /// <summary>Drag turns the model, pinch pushes in. The viewport is doing the same
+        /// job as the diorama camera, so it answers to the same gestures.</summary>
+        void HookViewport()
+        {
+            _viewport.RegisterCallback<PointerDownEvent>(e =>
+            {
+                _dragging = true;
+                _dragFrom = e.position;
+                _viewport.CapturePointer(e.pointerId);
+            });
+
+            _viewport.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (!_dragging || _stage == null) return;
+
+                Vector2 delta = (Vector2)e.position - _dragFrom;
+                _dragFrom = e.position;
+
+                _stage.Yaw -= delta.x * 0.5f;
+                _stage.Pitch = Mathf.Clamp(_stage.Pitch + delta.y * 0.25f, -18f, 42f);
+            });
+
+            _viewport.RegisterCallback<PointerUpEvent>(e =>
+            {
+                _dragging = false;
+                _viewport.ReleasePointer(e.pointerId);
+            });
+
+            _viewport.RegisterCallback<WheelEvent>(e =>
+            {
+                if (_stage == null) return;
+                _stage.Zoom = Mathf.Clamp(_stage.Zoom - e.delta.y * 0.06f, 0.6f, 2.4f);
+            });
+        }
+
+        /// <summary>Called every frame while the collection is open.</summary>
+        public void Tick()
+        {
+            if (_selected != null) _stage?.Render();
         }
 
         public void Refresh()
@@ -107,6 +164,14 @@ namespace LivingDiorama.UI
         {
             _selected = def;
             _detail.RemoveFromClassList("hidden");
+
+            if (_stage != null)
+            {
+                _stage.Yaw = 150f;
+                _stage.Pitch = 8f;
+                _stage.Zoom = 1f;
+                _ = _stage.Show(def);
+            }
 
             _detailName.text = def.displayName;
             _detailFlavour.text = string.IsNullOrWhiteSpace(def.flavourText)

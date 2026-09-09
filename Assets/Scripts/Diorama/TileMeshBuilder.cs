@@ -360,19 +360,32 @@ namespace LivingDiorama.Diorama
 
         // ---- water ----------------------------------------------------------
 
-        /// <summary>Flat water plane covering the tile, subdivided so the vertex wave has
-        /// something to move.</summary>
-        public static Mesh BuildWater(float tileSize)
+        /// <summary>
+        /// The water surface, built only where there is actually water.
+        ///
+        /// This used to be one flat sheet over the whole tile. Anywhere the ground
+        /// happened to dip below the waterline -- a hollow between two hills, a dozen
+        /// metres from the river -- a puddle appeared out of nowhere, and the sheet ran
+        /// right out to the tile edges. Emitting a cell only when its corners are under
+        /// water keeps the river in its bed.
+        /// </summary>
+        public static Mesh BuildWater(BiomeDefinition biome, Vector3 tileOrigin, float tileSize, int seed)
         {
             var mesh = new Mesh { name = "TileWater" };
-            const int res = 8;
+            const int res = 24;
+
+            float step = tileSize / res;
+            float waterWidth = biome.hasWater ? tileSize * 0.28f : 0f;
 
             var verts = new List<Vector3>((res + 1) * (res + 1));
             var uvs = new List<Vector2>(verts.Capacity);
             var norms = new List<Vector3>(verts.Capacity);
             var tris = new List<int>(res * res * 6);
 
-            float step = tileSize / res;
+            float Ground(int gx, int gz) => TerrainNoise.Height(
+                tileOrigin.x + gx * step, tileOrigin.z + gz * step, seed,
+                biome.reliefHeight, biome.reliefScale, waterWidth, biome.waterLevel);
+
             for (int z = 0; z <= res; z++)
             {
                 for (int x = 0; x <= res; x++)
@@ -387,6 +400,14 @@ namespace LivingDiorama.Diorama
             {
                 for (int x = 0; x < res; x++)
                 {
+                    // Keep the cell if any corner is submerged, so the shoreline lands
+                    // just past the water's edge rather than just short of it.
+                    bool wet = Ground(x, z) < biome.waterLevel
+                            || Ground(x + 1, z) < biome.waterLevel
+                            || Ground(x, z + 1) < biome.waterLevel
+                            || Ground(x + 1, z + 1) < biome.waterLevel;
+                    if (!wet) continue;
+
                     int i = z * (res + 1) + x;
                     tris.Add(i);
                     tris.Add(i + res + 1);
@@ -397,6 +418,8 @@ namespace LivingDiorama.Diorama
                 }
             }
 
+            if (tris.Count == 0) return null;
+
             mesh.SetVertices(verts);
             mesh.SetNormals(norms);
             mesh.SetUVs(0, uvs);
@@ -404,5 +427,6 @@ namespace LivingDiorama.Diorama
             mesh.RecalculateBounds();
             return mesh;
         }
+
     }
 }

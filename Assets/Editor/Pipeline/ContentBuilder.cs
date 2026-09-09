@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using LivingDiorama.Data;
+using LivingDiorama.Simulation;
 using UnityEditor;
 using UnityEngine;
 
@@ -34,6 +35,7 @@ namespace LivingDiorama.EditorTools
             Dictionary<string, CreatureDefinition> creatures = BuildCreatures();
             List<BiomeDefinition> biomes = BuildBiomes();
             List<MysteryBoxDefinition> boxes = BuildBoxes(creatures);
+            List<MomentDefinition> moments = BuildMoments();
 
             GameDatabase db = CreateOrLoad<GameDatabase>($"{ResourceRoot}/GameDatabase.asset");
             db.simulation = simulation;
@@ -42,6 +44,7 @@ namespace LivingDiorama.EditorTools
             db.creatures = new List<CreatureDefinition>(creatures.Values);
             db.biomes = biomes;
             db.boxes = boxes;
+            db.moments = moments;
             db.BuildIndex();
             EditorUtility.SetDirty(db);
 
@@ -57,7 +60,8 @@ namespace LivingDiorama.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log($"[ContentBuilder] rebuilt: {db.creatures.Count} creatures, " +
-                      $"{db.biomes.Count} biomes, {db.boxes.Count} boxes");
+                      $"{db.biomes.Count} biomes, {db.boxes.Count} boxes, " +
+                      $"{db.moments.Count} moments");
         }
 
         // ---- helpers --------------------------------------------------------
@@ -70,6 +74,7 @@ namespace LivingDiorama.EditorTools
                          $"{DataRoot}/Creatures",
                          $"{DataRoot}/Biomes",
                          $"{DataRoot}/Boxes",
+                         $"{DataRoot}/Moments",
                          ResourceRoot,
                          $"{ResourceRoot}/UI",
                          "Assets/StreamingAssets/Creatures",
@@ -639,6 +644,86 @@ namespace LivingDiorama.EditorTools
         };
 
         // ---- boxes ----------------------------------------------------------
+
+        /// <summary>
+        /// The Chronicle: the things worth catching your diorama doing.
+        ///
+        /// These are chosen to reward casting rather than collecting. Several need two
+        /// particular species in the same diorama at the same time, one needs it to be
+        /// dark, and none of them can be bought -- which is the point. A player who only
+        /// opens boxes will fill the collection and an almost empty Chronicle.
+        /// </summary>
+        static List<MomentDefinition> BuildMoments()
+        {
+            return new List<MomentDefinition>
+            {
+                Moment("sticky_fingers", "Sticky Fingers", Rarity.Common, 15,
+                    "Food went missing. Someone is very pleased with themselves.",
+                    "Somebody in your diorama has no respect for other people's dinner.",
+                    SimEventKind.StoleFood),
+
+                Moment("thief_and_hunter", "The Thief and the Hunter", Rarity.Rare, 60,
+                    "The goblin had barely finished chewing before the wolf came through "
+                    + "the ferns. It did not get to keep the apple.",
+                    "A hunter and a thief in the same small world will eventually meet.",
+                    SimEventKind.StartedChase, actor: "wolf", target: "goblin"),
+
+                Moment("rough_justice", "Justice, of a Sort", Rarity.Rare, 55,
+                    "The knight does not chase. The knight arrives.",
+                    "Someone in armour takes a dim view of stealing.",
+                    SimEventKind.Attacked, actor: "knight", target: "goblin"),
+
+                Moment("puddle_dance", "Puddle Dance", Rarity.Common, 20,
+                    "No purpose to it whatsoever. That is rather the appeal.",
+                    "Slimes cannot walk past water. They have tried.",
+                    SimEventKind.PlayedInWater, actor: "slime"),
+
+                Moment("clean_getaway", "Clean Getaway", Rarity.Uncommon, 35,
+                    "Outrun, out-turned, and gone into the undergrowth.",
+                    "Not every chase ends the way the chaser intended.",
+                    SimEventKind.EscapedChase),
+
+                Moment("unlikely_pair", "An Unlikely Pair", Rarity.Uncommon, 40,
+                    "Nobody expected these two to get along. They have not been told.",
+                    "Two creatures with nothing in common may still decide to be friends.",
+                    SimEventKind.MadeFriend),
+
+                Moment("down_and_out", "Down and Out", Rarity.Uncommon, 35,
+                    "It will be fine. It will also be more careful next time.",
+                    "Some arguments in the diorama are settled the hard way.",
+                    SimEventKind.KnockedOut),
+
+                Moment("midnight_walk", "The Midnight Walk", Rarity.Rare, 65,
+                    "Everything else was asleep. Something was not.",
+                    "One of your creatures keeps hours the others do not.",
+                    SimEventKind.WokeUp, actor: "skeleton", time: TimeRequirement.Night),
+
+                Moment("great_shadow", "The Great Shadow", Rarity.Epic, 120,
+                    "It did nothing at all. It did not need to.",
+                    "Put something enormous among something small and watch the small ones decide.",
+                    SimEventKind.Intimidated, actor: "dragon"),
+            };
+        }
+
+        static MomentDefinition Moment(string id, string title, Rarity prestige, int essence,
+                                       string flavour, string hint, SimEventKind trigger,
+                                       string actor = "", string target = "",
+                                       TimeRequirement time = TimeRequirement.Any)
+        {
+            var m = CreateOrLoad<MomentDefinition>($"{DataRoot}/Moments/{id}.asset");
+            m.id = id;
+            m.title = title;
+            m.prestige = prestige;
+            m.essence = essence;
+            m.flavour = flavour;
+            m.hint = hint;
+            m.trigger = trigger;
+            m.actorSpecies = actor;
+            m.targetSpecies = target;
+            m.time = time;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
 
         static List<MysteryBoxDefinition> BuildBoxes(Dictionary<string, CreatureDefinition> creatures)
         {
