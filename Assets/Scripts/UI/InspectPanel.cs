@@ -117,6 +117,15 @@ namespace LivingDiorama.UI
 
         void HookViewport()
         {
+            // The hint sits inside the viewport and would otherwise be the thing a finger
+            // lands on. Events bubble, so it mostly works anyway -- but a label that can be
+            // picked is one more way for a gesture to go missing, and the last time this
+            // screen shipped, pinch did nothing at all.
+            foreach (Label hint in _viewport.Query<Label>().ToList())
+            {
+                hint.pickingMode = PickingMode.Ignore;
+            }
+
             _viewport.RegisterCallback<PointerDownEvent>(e =>
             {
                 _touches[e.pointerId] = e.position;
