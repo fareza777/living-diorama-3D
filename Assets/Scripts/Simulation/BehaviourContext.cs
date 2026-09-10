@@ -35,6 +35,10 @@ namespace LivingDiorama.Simulation
         public readonly CreatureAgent Companion;
         public readonly float CompanionDistance;
 
+        /// <summary>What the player has built, and where. Null in the flat stub the
+        /// brain is unit tested against.</summary>
+        public readonly Diorama.PlacementService Placements;
+
         public readonly FoodNode Food;
         public readonly float FoodDistance;
 
@@ -50,7 +54,8 @@ namespace LivingDiorama.Simulation
             CreatureAgent quarry, float quarryDistance, Stance quarryStance,
             CreatureAgent companion, float companionDistance,
             FoodNode food, float foodDistance,
-            bool hasWater, Vector3 waterPoint, float waterDistance)
+            bool hasWater, Vector3 waterPoint, float waterDistance,
+            Diorama.PlacementService placements = null)
         {
             Self = self;
             World = world;
@@ -72,6 +77,7 @@ namespace LivingDiorama.Simulation
             HasWater = hasWater;
             WaterPoint = waterPoint;
             WaterDistance = waterDistance;
+            Placements = placements;
         }
 
         public CreatureDefinition Def => Self.Definition;

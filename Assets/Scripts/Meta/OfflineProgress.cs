@@ -113,7 +113,36 @@ namespace LivingDiorama.Meta
                 c.social = Mathf.Max(floor, c.social - def.socialRate * hours * 0.5f);
                 // Energy recovers while away: they had all that time to nap.
                 c.energy = Mathf.Clamp01(c.energy + 0.05f * hours);
+
+                GrowWhileAway(c);
             }
+        }
+
+        /// <summary>
+        /// Growing up carries on while the app is closed -- but only up to the same daily
+        /// allowance, and only as well as the creature was left.
+        ///
+        /// Without this, closing the app stops time and three weeks of growing become
+        /// three weeks of screen time. Uncapped, the fastest way to raise a creature would
+        /// be to never open the game. Same allowance either way: a day away is worth a
+        /// little, a day of care is worth all of it.
+        /// </summary>
+        static void GrowWhileAway(SavedCreature c)
+        {
+            if (c.growth >= 1f) return;
+
+            long today = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 86400L;
+            if (today == c.growthDay) return;
+
+            c.growthDay = today;
+
+            // Left hungry and lonely it barely grows; left content it earns most of the
+            // day. Short of a full allowance on purpose -- being there is worth something.
+            float care = Mathf.Clamp01(c.fullness * 0.5f + c.energy * 0.3f + c.social * 0.2f);
+            float earned = 1f / Simulation.CreatureAgent.DaysToGrown * care * 0.6f;
+
+            c.growthToday = earned;
+            c.growth = Mathf.Clamp01(c.growth + earned);
         }
     }
 }

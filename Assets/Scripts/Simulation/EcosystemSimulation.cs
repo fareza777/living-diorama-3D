@@ -11,7 +11,7 @@ namespace LivingDiorama.Simulation
     /// fixed low rate spread across buckets so the frame cost stays flat as the
     /// population grows.
     /// </summary>
-    public sealed class EcosystemSimulation : MonoBehaviour
+    public sealed class EcosystemSimulation : MonoBehaviour, UI.IWorldSurfaceProvider
     {
         readonly List<CreatureAgent> _agents = new(48);
         readonly List<FoodNode> _food = new(32);
@@ -28,6 +28,10 @@ namespace LivingDiorama.Simulation
 
         public WorldClock Clock { get; private set; }
         public IWorldSurface Surface { get; private set; }
+
+        /// <summary>What the player has built. Null until the diorama hands it over,
+        /// and null forever in the flat stub the brain is tested against.</summary>
+        public Diorama.PlacementService Placements { get; set; }
         public SimulationSettings Settings { get; private set; }
         public IReadOnlyList<CreatureAgent> Agents => _agents;
         public bool IsRunning { get; private set; }
@@ -214,6 +218,11 @@ namespace LivingDiorama.Simulation
                 float activity = Settings.ActivityFor(agent.Definition.activity, Clock.NormalisedTime);
                 agent.TickNeeds(inGameHours, activity);
 
+                // Growing up runs on real seconds, not on the world clock. The diorama's
+                // day is twelve minutes long; if growth followed it a creature would be
+                // fully grown before lunch.
+                agent.TickGrowth(tickDelta);
+
                 if (agent.IsKnockedOut) continue;
 
                 BehaviourContext ctx = BuildContext(agent, activity);
@@ -292,7 +301,7 @@ namespace LivingDiorama.Simulation
                 quarry, quarryDist, quarryStance,
                 companion, companionDist,
                 food, foodDist,
-                hasWater, waterPoint, waterDist);
+                hasWater, waterPoint, waterDist, Placements);
         }
 
         void RunMovement(float dt)

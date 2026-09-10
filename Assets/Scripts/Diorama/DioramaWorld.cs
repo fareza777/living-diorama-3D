@@ -416,11 +416,38 @@ namespace LivingDiorama.Diorama
         /// becomes a picture. Resolving the overlap after the move keeps the steering
         /// simple -- the brain never has to know the scenery is there.
         /// </summary>
+        /// <summary>
+        /// Blockers from things the player placed.
+        ///
+        /// Kept apart from the per-tile scatter list rather than merged into it: that
+        /// list is rebuilt from scratch every time a tile is dressed, and the prop
+        /// library finishing its load re-dresses every tile. Merged, a bed would vanish
+        /// from the steering the first time the scenery refreshed.
+        /// </summary>
+        readonly List<Vector3> _placementObstacles = new(8);
+
+        public void SetPlacementObstacles(IReadOnlyList<Placement> placements)
+        {
+            _placementObstacles.Clear();
+
+            foreach (Placement placement in placements)
+            {
+                _placementObstacles.Add(new Vector3(
+                    placement.Position.x, placement.Definition.Radius, placement.Position.z));
+            }
+        }
+
         public Vector3 ResolveObstacles(Vector3 world, float radius)
         {
+            world = PushOut(world, radius, _placementObstacles);
+
             if (!_tiles.TryGetValue(CoordAt(world), out DioramaTile tile)) return world;
 
-            List<Vector3> obstacles = tile.Obstacles;
+            return PushOut(world, radius, tile.Obstacles);
+        }
+
+        static Vector3 PushOut(Vector3 world, float radius, List<Vector3> obstacles)
+        {
             for (int i = 0; i < obstacles.Count; i++)
             {
                 Vector3 o = obstacles[i];

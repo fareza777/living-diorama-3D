@@ -57,9 +57,22 @@
 
         <ui:VisualElement class="spacer" picking-mode="Ignore" />
 
+        <ui:VisualElement name="build-bar" class="build hidden">
+            <ui:Label name="build-hint" class="build__hint" text="" />
+            <ui:VisualElement class="row">
+                <ui:Button name="btn-build-cancel" class="button button--ghost" text="Cancel"
+                           style="flex-grow: 1;" />
+                <ui:Button name="btn-build-rotate" class="button button--ghost" text="Turn"
+                           style="flex-grow: 1; margin-left: 8px;" />
+                <ui:Button name="btn-build-place" class="button button--primary" text="Place"
+                           style="flex-grow: 2; margin-left: 8px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <ui:VisualElement class="hud__bottom" picking-mode="Ignore">
             <ui:Button name="btn-box" class="button button--primary tray__button tray__button--primary" text="Mystery Box" />
             <ui:Button name="btn-collection" class="button button--ghost tray__button" text="Collection" />
+            <ui:Button name="btn-build" class="button button--ghost tray__button" text="Build" />
             <ui:Button name="btn-expand" class="button button--ghost tray__button" text="Expand" />
         </ui:VisualElement>
     </ui:VisualElement>
@@ -116,6 +129,19 @@
                       style="margin-top: 10px;" />
 
             <ui:Button name="btn-collection-close" class="button modal__close" text="✕" tooltip="Close" />
+        </ui:VisualElement>
+
+        <!-- ========================================================= build -->
+        <ui:VisualElement name="modal-build" class="modal__card hidden">
+            <ui:Label class="modal__title" text="Build" />
+            <ui:Label class="modal__subtitle"
+                      text="Put something down and your creature will find a use for it." />
+            <ui:Button name="btn-build-close" class="button modal__close" text="✕" tooltip="Close" />
+
+            <ui:ScrollView name="build-list" style="max-height: 520px;" />
+
+            <ui:Label name="build-empty" class="modal__subtitle hidden"
+                      text="Nothing left to build with. Mystery boxes hold more." />
         </ui:VisualElement>
 
         <!-- ======================================================= inspect -->

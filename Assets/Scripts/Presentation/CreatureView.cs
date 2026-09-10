@@ -36,6 +36,22 @@ namespace LivingDiorama.Presentation
         bool _sleeping;
         float _sleepBlend;
 
+        // ---- growing up -----------------------------------------------------
+
+        /// <summary>Body scale at birth and when grown.</summary>
+        const float BabyScale = 0.55f;
+
+        /// <summary>How much bigger the head sits on a newborn, relative to the rest of
+        /// it. This is the half that makes growth read as growing *up* rather than as
+        /// merely getting bigger: a creature scaled uniformly is the same creature seen
+        /// from closer, and a head that shrinks against the body is a child becoming an
+        /// adult.</summary>
+        const float BabyHead = 1.35f;
+
+        Transform _head;
+        bool _headSearched;
+        float _growth = -1f;
+
         float _sleepVelocity;
 
         float _knockBlend;
@@ -291,6 +307,8 @@ namespace LivingDiorama.Presentation
             if (!UseProceduralRig)
             {
                 TickAnimator();
+                ApplyGrowth();
+                _modelRoot.localScale = Vector3.one * BodyScale;
                 if (_emote != null) _emote.Tick(dt);
                 return;
             }
@@ -311,9 +329,11 @@ namespace LivingDiorama.Presentation
             _euler = Vector3.SmoothDamp(_euler, euler, ref _eulerVelocity, 0.07f);
             _scale = Vector3.SmoothDamp(_scale, scale, ref _scaleVelocity, 0.07f);
 
-            _modelRoot.localPosition = _offset;
+            ApplyGrowth();
+
+            _modelRoot.localPosition = _offset * BodyScale;
             _modelRoot.localRotation = Quaternion.Euler(_euler);
-            _modelRoot.localScale = _scale;
+            _modelRoot.localScale = _scale * BodyScale;
 
             if (_emote != null) _emote.Tick(dt);
         }
@@ -365,6 +385,57 @@ namespace LivingDiorama.Presentation
             // skeleton: head back, shoulders up.
             _ => RigAction.Startle,
         };
+
+        /// <summary>
+        /// Size and proportion for how grown the creature is.
+        ///
+        /// Applied every frame after the animator has run, because a clip that carries
+        /// scale curves would otherwise write over the head each time it played.
+        /// </summary>
+        void ApplyGrowth()
+        {
+            float growth = _agent != null ? _agent.Growth : 1f;
+
+            if (!_headSearched)
+            {
+                _headSearched = true;
+                _head = FindHead();
+            }
+
+            if (_head != null)
+            {
+                float head = Mathf.Lerp(BabyHead, 1f, growth);
+                _head.localScale = new Vector3(head, head, head);
+            }
+
+            if (Mathf.Approximately(growth, _growth)) return;
+            _growth = growth;
+
+            // The emote bubble rides on the creature's height, so it has to come down
+            // with it -- otherwise a baby's mood floats a body length above its head.
+            _emote?.SetHeight(_def.bodyHeight * 1.35f * BodyScale);
+        }
+
+        float BodyScale => Mathf.Lerp(BabyScale, 1f, _agent != null ? _agent.Growth : 1f);
+
+        /// <summary>
+        /// The head bone, whatever route the model arrived by.
+        ///
+        /// Meshy names it "Head" on every rig it produces -- the same name on the goblin's
+        /// and on anything rigged later -- and the procedural rig names its own the same
+        /// thing, so one lookup covers both.
+        /// </summary>
+        Transform FindHead()
+        {
+            if (_model == null) return null;
+
+            foreach (Transform t in _model.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == "Head") return t;
+            }
+
+            return null;
+        }
 
         float GaitFrequency()
         {

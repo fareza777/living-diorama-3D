@@ -62,6 +62,32 @@ PROPS: dict[str, dict] = {
         "prompt": "a low rounded leafy shrub, dense mid-green foliage with a few small "
                   "berries, no visible soil",
     },
+
+    # Furniture the player places, and the creature uses. Each one has to read as
+    # "you can do something here" from a phone-sized distance, so they are described
+    # by their silhouette rather than by their detail.
+    "bed": {
+        "polycount": 1600,
+        "prompt": "a small cosy bed of woven straw and patched cloth, low wooden frame, one "
+                  "plump pillow at the head end, blanket folded back, seen as a single piece "
+                  "of furniture",
+    },
+    "food_bowl": {
+        "polycount": 900,
+        "prompt": "a wide shallow wooden bowl heaped with round berries and fruit, thick "
+                  "carved rim, sitting flat",
+    },
+    "sword_dummy": {
+        "polycount": 1400,
+        "prompt": "a training dummy made of a thick wooden post with a straw-stuffed sack "
+                  "body, a crossbeam for arms, rope bindings, planted on a small wooden "
+                  "cross base",
+    },
+    "drum": {
+        "polycount": 1000,
+        "prompt": "a squat hand drum with a stretched hide head, curved wooden barrel body, "
+                  "rope lacing down the sides, standing upright",
+    },
 }
 
 

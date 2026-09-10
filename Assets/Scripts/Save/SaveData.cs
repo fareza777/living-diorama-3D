@@ -36,6 +36,12 @@ namespace LivingDiorama.Save
 
         public List<SavedTile> tiles = new();
         public List<SavedCreature> creatures = new();
+
+        /// <summary>Furniture the player built, and what is left in the crate.
+        /// Both are progress, so both survive a reinstall.</summary>
+        public List<SavedPlacement> placements = new();
+        public List<string> stockIds = new();
+        public List<int> stockCounts = new();
         public List<string> discoveredSpecies = new();
 
         /// <summary>Moments the player has actually witnessed, by id. The Chronicle is
@@ -86,6 +92,35 @@ namespace LivingDiorama.Save
         public bool placed = true;
 
         public string nickname = "";
+
+        /// <summary>
+        /// How far along it is from newborn to grown, 0 to 1.
+        ///
+        /// Continuous rather than a stage index, because a creature that changes three
+        /// times in three weeks is invisible on any given day, and a player who sees
+        /// nothing happen for five days stops opening the app. It grows a little every
+        /// day; Baby, Young and Adult are thresholds crossed along the way, not the
+        /// thing being stored.
+        /// </summary>
+        [Range(0f, 1f)] public float growth;
+
+        /// <summary>Unix day the growth allowance below belongs to. Growth is capped per
+        /// real day, so the only way forward is to come back tomorrow -- which is the
+        /// whole point of raising something.</summary>
+        public long growthDay;
+
+        /// <summary>How much of today's allowance has already been earned.</summary>
+        public float growthToday;
+    }
+
+    /// <summary>One thing the player built, and where they put it.</summary>
+    [Serializable]
+    public sealed class SavedPlacement
+    {
+        public string id;
+        public string placeableId;
+        public Vector3 position;
+        public float yaw;
     }
 
     [Serializable]

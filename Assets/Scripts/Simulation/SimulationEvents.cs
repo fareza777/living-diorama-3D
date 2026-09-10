@@ -19,6 +19,9 @@ namespace LivingDiorama.Simulation
         PlayedInWater,
         Intimidated,
         Discovered,
+
+        /// <summary>Walked to something the player built, and used it.</summary>
+        UsedPlacement,
     }
 
     /// <summary>

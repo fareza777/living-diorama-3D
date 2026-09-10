@@ -41,7 +41,9 @@ STYLE = (
 )
 NEGATIVE = (
     "photorealistic, gritty, gore, blood, text, watermark, multiple characters, "
-    "base plate, pedestal, cluttered, thin fragile spikes, high poly noise, blurry texture"
+    "base plate, pedestal, cluttered, thin fragile spikes, high poly noise, blurry texture, "
+    "angry, scowling, menacing, evil, fangs, sharp teeth, wrinkled skin, hunched, "
+    "held weapon, held object, backpack, bag"
 )
 
 CREATURES: dict[str, dict] = {
@@ -50,6 +52,25 @@ CREATURES: dict[str, dict] = {
         "prompt": "a mischievous little goblin with big pointed ears, wide grin showing one "
                   "crooked tooth, green skin, oversized head, tattered brown loincloth and a "
                   "tiny burlap sack strapped to its back, bare feet, hunched sneaky posture",
+    },
+    # A second pass at the goblin. Three things the first one got wrong, all of them
+    # written into its own prompt: "hunched sneaky posture" and "wide grin showing one
+    # crooked tooth" are why it reads as menacing rather than as something you would
+    # want to raise, and a hunch is also the pose Meshy rigs worst. The burlap sack
+    # goes for the same reason the knight's shield should have: a prop fused to the
+    # body gets bound to whichever bone is nearest and smears when it animates.
+    #
+    # Generated under its own id so the shipped goblin stays untouched until this one
+    # is proven to rig -- Meshy has produced an unriggable model three times on this
+    # project.
+    "goblin_v2": {
+        "polycount": 7000,
+        "prompt": "an adorable chubby baby goblin, oversized round head about one third of "
+                  "its total height, very large round friendly eyes set low on the face, "
+                  "soft rounded eyebrows, small round nose, small closed friendly smile with "
+                  "no visible teeth, big pointed ears, green skin, plump rounded arms and "
+                  "legs, simple tattered brown loincloth, bare feet, standing upright and "
+                  "relaxed with the arms held slightly away from the body, symmetrical",
     },
     "slime": {
         "polycount": 3000,
@@ -243,6 +264,9 @@ def cmd_poll(only: list) -> None:
 # prompts lead with the colour and say so twice, and the negative prompt names the
 # failure mode explicitly.
 RETEXTURE: dict[str, str] = {
+    "goblin_v2": "vivid grass green skin, strongly saturated green, warm tan leather "
+                 "loincloth, large amber yellow eyes with big black pupils, pink inner ears, "
+                 "rosy cheeks",
     "goblin": "vivid grass green skin, strongly saturated green, warm tan leather "
               "loincloth, amber yellow eyes, pink inner ears",
     "wolf": "rich warm grey brown fur with chestnut undertones, cream chest and muzzle, "

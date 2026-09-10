@@ -4,6 +4,10 @@ using UnityEngine;
 
 namespace LivingDiorama.Simulation
 {
+    /// <summary>How grown a creature is. The names are what the player sees; the number
+    /// behind them is continuous.</summary>
+    public enum LifeStage { Baby, Young, Adult }
+
     public enum Mood
     {
         Content,
@@ -45,6 +49,64 @@ namespace LivingDiorama.Simulation
         public bool IsKnockedOut { get; private set; }
         float _knockoutRemaining;
 
+        // ---- growing up -----------------------------------------------------
+
+        /// <summary>Real days of well-tended life it takes to go from newborn to grown.
+        /// Three weeks, deliberately: this is a creature you raise, not a bar you fill.
+        /// </summary>
+        public const float DaysToGrown = 20f;
+
+        /// <summary>0 at birth, 1 when fully grown. Continuous, so there is something to
+        /// see every day rather than three jumps a week apart.</summary>
+        public float Growth { get; private set; }
+
+        public long GrowthDay { get; private set; }
+        public float GrowthToday { get; private set; }
+
+        public LifeStage Stage =>
+            Growth < 0.25f ? LifeStage.Baby :
+            Growth < 0.65f ? LifeStage.Young : LifeStage.Adult;
+
+        public void RestoreGrowth(float growth, long day, float today)
+        {
+            Growth = Mathf.Clamp01(growth);
+            GrowthDay = day;
+            GrowthToday = today;
+        }
+
+        /// <summary>
+        /// Earn a share of today's growth.
+        ///
+        /// Two rules do all the work. It is scaled by wellbeing, so a creature that is fed,
+        /// rested and entertained grows and a neglected one stalls -- the player is the
+        /// reason it grows up, not the clock. And it is capped per real day, so nobody can
+        /// sit on the app for six hours and skip a week; twenty minutes of care a day gets
+        /// you there exactly as fast, which is the correct trade for something you are
+        /// meant to keep.
+        /// </summary>
+        public void TickGrowth(float realSeconds, float rateMultiplier = 1f)
+        {
+            if (Growth >= 1f || realSeconds <= 0f) return;
+
+            long today = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 86400L;
+            if (today != GrowthDay)
+            {
+                GrowthDay = today;
+                GrowthToday = 0f;
+            }
+
+            float allowance = 1f / DaysToGrown;
+            float remaining = allowance - GrowthToday;
+            if (remaining <= 0f) return;
+
+            // A full day's allowance is earned by a full day of being well looked after.
+            float earned = realSeconds / 86400f * Mathf.Clamp01(Wellbeing) * rateMultiplier;
+            earned = Mathf.Min(earned, remaining);
+
+            GrowthToday += earned;
+            Growth = Mathf.Clamp01(Growth + earned);
+        }
+
         // ---- movement -------------------------------------------------------
         public Vector3 Position => transform.position;
         public Vector3 Velocity { get; private set; }
@@ -63,6 +125,9 @@ namespace LivingDiorama.Simulation
         public CreatureAgent TargetAgent;
         public FoodNode TargetFood;
         public Vector3 TargetPoint;
+
+        /// <summary>The built object this creature is on its way to, if any.</summary>
+        public Diorama.Placement TargetPlacement;
         public bool CarryingStolenFood;
         public float ActionCooldown;              // shared attack / interact cooldown
 

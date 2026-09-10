@@ -137,6 +137,8 @@ namespace LivingDiorama.Diorama
         /// <summary>Bake the hierarchy's transform in, stand the model on y = 0 and scale
         /// it to one unit tall, so a scatter entry's height and scale range still describe
         /// what they used to.</summary>
+        public static Mesh NormaliseMesh(MeshFilter filter) => Normalise(filter);
+
         static Mesh Normalise(MeshFilter filter)
         {
             Mesh source = filter.sharedMesh;

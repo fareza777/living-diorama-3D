@@ -208,6 +208,7 @@ namespace LivingDiorama.Core
             if (agent == null) return null;
 
             agent.Fullness = entry.fullness;
+            agent.RestoreGrowth(entry.growth, entry.growthDay, entry.growthToday);
             agent.Energy = entry.energy;
             agent.Social = entry.social;
             agent.Fun = entry.fun;
@@ -248,6 +249,9 @@ namespace LivingDiorama.Core
 
             entry.position = agent.Position;
             entry.fullness = agent.Fullness;
+            entry.growth = agent.Growth;
+            entry.growthDay = agent.GrowthDay;
+            entry.growthToday = agent.GrowthToday;
             entry.energy = agent.Energy;
             entry.social = agent.Social;
             entry.fun = agent.Fun;

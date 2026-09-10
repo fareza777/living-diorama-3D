@@ -35,6 +35,17 @@ namespace LivingDiorama.Presentation
             return bubble;
         }
 
+        /// <summary>Ride lower on a smaller creature. A baby's mood otherwise floats a
+        /// body length above its head.</summary>
+        public void SetHeight(float height)
+        {
+            Vector3 local = transform.localPosition;
+            if (Mathf.Approximately(local.y, height)) return;
+
+            local.y = height;
+            transform.localPosition = local;
+        }
+
         void Build()
         {
             _quad = _quad != null ? _quad : BuildQuad();

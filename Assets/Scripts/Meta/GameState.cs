@@ -56,6 +56,49 @@ namespace LivingDiorama.Meta
             return true;
         }
 
+        // ---- the crate ------------------------------------------------------
+
+        /// <summary>
+        /// How many of a thing the player owns but has not put down yet.
+        ///
+        /// Two parallel lists rather than a dictionary because Unity's JsonUtility does
+        /// not serialise dictionaries, and this has to survive being written to disk. The
+        /// lists are short and only ever read through these three methods.
+        /// </summary>
+        public int StockOf(string placeableId)
+        {
+            int i = Data.stockIds.IndexOf(placeableId);
+            return i < 0 ? 0 : Data.stockCounts[i];
+        }
+
+        public void AddStock(string placeableId, int amount)
+        {
+            int i = Data.stockIds.IndexOf(placeableId);
+            if (i < 0)
+            {
+                Data.stockIds.Add(placeableId);
+                Data.stockCounts.Add(Mathf.Max(0, amount));
+            }
+            else
+            {
+                Data.stockCounts[i] = Mathf.Max(0, Data.stockCounts[i] + amount);
+            }
+
+            StockChanged?.Invoke();
+        }
+
+        public bool TakeStock(string placeableId)
+        {
+            int i = Data.stockIds.IndexOf(placeableId);
+            if (i < 0 || Data.stockCounts[i] <= 0) return false;
+
+            Data.stockCounts[i]--;
+            StockChanged?.Invoke();
+            return true;
+        }
+
+        public event Action StockChanged;
+
         public void Grant(CurrencyKind kind, int amount)
         {
             if (amount <= 0) return;
@@ -239,6 +282,14 @@ namespace LivingDiorama.Meta
                 lastSeenUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             };
             data.stats.firstPlayedUnix = data.lastSeenUnix;
+
+            // Something to build with on day one. A bed and a bowl are the two a creature
+            // needs to be looked after at all, so they are a starting kit rather than a
+            // reward -- the game cannot teach what building is for without them.
+            data.stockIds.Add("bed");
+            data.stockCounts.Add(1);
+            data.stockIds.Add("food_bowl");
+            data.stockCounts.Add(1);
 
             BiomeDefinition starting = db.biomes.Count > 0 ? db.biomes[0] : null;
             int half = p.startingTilesPerSide / 2;

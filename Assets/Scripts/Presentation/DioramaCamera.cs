@@ -391,6 +391,63 @@ namespace LivingDiorama.Presentation
             _targetPivot.y = Mathf.Clamp(_targetPivot.y, c.y - _bounds.extents.y, c.y + _bounds.extents.y);
         }
 
+        /// <summary>
+        /// Where a tap lands on the ground.
+        ///
+        /// The terrain has no collider -- it is a height function the simulation queries
+        /// thousands of times a second, and giving every tile a mesh collider to support
+        /// one tap would mean rebuilding them all whenever the diorama grows. So the ray
+        /// is walked forward until it crosses the surface, then bisected. Forty steps and
+        /// twelve refinements land inside a centimetre.
+        /// </summary>
+        public bool TryPickGround(Vector2 screenPosition, IWorldSurface surface, out Vector3 point)
+        {
+            point = default;
+            if (_camera == null || surface == null) return false;
+
+            Ray ray = _camera.ScreenPointToRay(screenPosition);
+
+            const float far = 60f;
+            const int steps = 40;
+
+            float previous = 0f;
+            float previousGap = Gap(0f);
+
+            for (int i = 1; i <= steps; i++)
+            {
+                float distance = far * i / steps;
+                float gap = Gap(distance);
+
+                if (previousGap > 0f && gap <= 0f)
+                {
+                    float lo = previous, hi = distance;
+                    for (int refine = 0; refine < 12; refine++)
+                    {
+                        float mid = (lo + hi) * 0.5f;
+                        if (Gap(mid) > 0f) lo = mid;
+                        else hi = mid;
+                    }
+
+                    point = ray.GetPoint((lo + hi) * 0.5f);
+                    point.y = surface.SampleHeight(point);
+                    return true;
+                }
+
+                previous = distance;
+                previousGap = gap;
+            }
+
+            return false;
+
+            // Height of the ray above the ground at a distance along it. Positive while
+            // the ray is still in the air.
+            float Gap(float distance)
+            {
+                Vector3 at = ray.GetPoint(distance);
+                return at.y - surface.SampleHeight(at);
+            }
+        }
+
         void Pick(Vector2 screenPosition)
         {
             _dragging = false;

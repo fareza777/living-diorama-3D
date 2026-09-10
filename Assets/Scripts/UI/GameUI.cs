@@ -50,6 +50,8 @@ namespace LivingDiorama.UI
         BoxPanel _boxPanel;
         CollectionPanel _collectionPanel;
         InspectPanel _inspectPanel;
+        BuildPanel _buildPanel;
+        BuildMode _build;
         ChroniclePanel _chroniclePanel;
         CreatureStage _creatureStage;
         Button _chronicleButton;
@@ -129,6 +131,7 @@ namespace LivingDiorama.UI
             _boxPanel = new BoxPanel(_root.Q<VisualElement>("modal-box"), _game, this);
             _collectionPanel = new CollectionPanel(_root.Q<VisualElement>("modal-collection"), _game, this);
             _inspectPanel = new InspectPanel(_root.Q<VisualElement>("modal-inspect"), _game, this);
+            _buildPanel = new BuildPanel(_root.Q<VisualElement>("modal-build"), _game, this);
             _chroniclePanel = new ChroniclePanel(_root.Q<VisualElement>("modal-chronicle"), _game, this);
             _expandPanel = new ExpandPanel(_root.Q<VisualElement>("modal-expand"), _game, this);
             _welcome = new WelcomePanel(_root.Q<VisualElement>("modal-welcome"), _game, this);
@@ -150,6 +153,11 @@ namespace LivingDiorama.UI
             _boxButton.clicked += () => { Click(); OpenModal(_boxPanel.Root, _boxPanel.Refresh); };
             _root.Q<Button>("btn-collection").clicked += () => { Click(); OpenCollection(); };
             _root.Q<Button>("btn-expand").clicked += () => { Click(); OpenModal(_expandPanel.Root, _expandPanel.Refresh); };
+            _root.Q<Button>("btn-build").clicked += () => { Click(); OpenModal(_buildPanel.Root, _buildPanel.Refresh); };
+
+            _root.Q<Button>("btn-build-cancel").clicked += () => { Click(); _build?.Cancel(); };
+            _root.Q<Button>("btn-build-rotate").clicked += () => { Click(); _build?.Rotate(); };
+            _root.Q<Button>("btn-build-place").clicked += () => { Click(); ConfirmBuild(); };
 
             _chronicleButton = _root.Q<Button>("btn-chronicle");
             _chronicleButton.clicked += () => { Click(); OpenModal(_chroniclePanel.Root, _chroniclePanel.Refresh); };
@@ -363,6 +371,7 @@ namespace LivingDiorama.UI
             // The earning rate is derived from every creature's wellbeing, so recomputing
             // it every frame would be wasteful for a number that changes slowly.
             if (_openModals.Contains(_inspectPanel.Root)) _inspectPanel.Tick();
+            if (_build != null && _build.Active) _build.Tick(_sim);
 
             _hudRefreshTimer -= Time.deltaTime;
             if (_hudRefreshTimer <= 0f)
@@ -451,6 +460,30 @@ namespace LivingDiorama.UI
         }
 
         // ---- modals ----------------------------------------------------------
+
+        /// <summary>Hand the build mode its dependencies once the world exists.</summary>
+        public void AttachBuildMode(BuildMode build)
+        {
+            _build = build;
+        }
+
+        /// <summary>Close the palette and start aiming. The modal has to go, because the
+        /// point of this mode is looking at the diorama.</summary>
+        public void BeginBuilding(string placeableId)
+        {
+            CloseModals();
+            _build?.Begin(placeableId);
+            SetHudVisible(true);
+        }
+
+        void ConfirmBuild()
+        {
+            if (_build == null) return;
+            if (!_build.Confirm()) return;
+
+            _audio?.PlaySfx("place");
+            RefreshAll();
+        }
 
         public void OpenCollection() => OpenModal(_collectionPanel.Root, _collectionPanel.Refresh);
 

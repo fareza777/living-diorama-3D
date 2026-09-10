@@ -31,6 +31,13 @@ namespace LivingDiorama.Simulation
             new SocialiseBehaviour(),
             new PlayInWaterBehaviour(),
             new StealFoodBehaviour(),
+
+            // Things the player built. They score above their wild equivalents when
+            // one is in reach, which is what makes building one worth doing.
+            new SleepInBedBehaviour(),
+            new EatFromBowlBehaviour(),
+            new TrainAtDummyBehaviour(),
+            new PlayDrumBehaviour(),
         });
 
         public int BehaviourCount => _behaviours.Length;

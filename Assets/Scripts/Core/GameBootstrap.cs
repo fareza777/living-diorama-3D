@@ -213,6 +213,20 @@ namespace LivingDiorama.Core
             volume.profile = profile;
         }
 
+        PlacementService _placements;
+
+        /// <summary>Put back everything the player had built. Runs once the models are in
+        /// memory, because a placement with no mesh is an invisible obstacle.</summary>
+        void RestorePlacements()
+        {
+            _placements.Clear();
+
+            foreach (SavedPlacement saved in _state.Data.placements)
+            {
+                _placements.Place(saved.placeableId, saved.position, saved.yaw, saved.id);
+            }
+        }
+
         async System.Threading.Tasks.Task UpgradeSceneryAsync()
         {
             var library = new PropLibrary();
@@ -222,6 +236,15 @@ namespace LivingDiorama.Core
 
             _world.Props = library;
             _world.RefreshScatter();
+
+            // The things the player builds load alongside the scenery, and the simulation
+            // is handed the register the moment it exists so a creature can start wanting
+            // to use them.
+            if (_placements != null)
+            {
+                await _placements.LoadAsync();
+                RestorePlacements();
+            }
 
             // The modelled trees are taller than what they replaced, so the shot has to
             // be taken again now that the canopy is known.
@@ -301,7 +324,9 @@ namespace LivingDiorama.Core
 
             _sim = simGo.AddComponent<EcosystemSimulation>();
             _factory = new CreatureFactory(Shader.Find("Living Diorama/Creature"));
+            _placements = PlacementService.Create(_world);
             _sim.Initialise(_db, _world, _clock, _factory);
+            _sim.Placements = _placements;
 
             foreach (var kv in _world.Tiles)
             {
@@ -351,6 +376,9 @@ namespace LivingDiorama.Core
 
             _ui = uiGo.AddComponent<GameUI>();
             _ui.Initialise(document, _controller, _economy, _sim, _camera, _audio, _unboxing, EraseSave);
+
+            _ui.AttachBuildMode(new UI.BuildMode(_controller, _camera, _placements,
+                document.rootVisualElement.Q<VisualElement>("build-bar")));
             _ui.AttachCreatureStage(UI.CreatureStage.Create(_factory));
 
             _world.TileBuilt += OnTileBuilt;

@@ -37,6 +37,9 @@
       "animations": {},
       "rig_failed": true,
       "note": "Meshy rigs this mesh to a 24KB empty model twice over; the animation service then rejects it. Uses the procedural rig instead."
+    },
+    "goblin_v2": {
+      "rig_id": "01a08a3b-52fa-76c5-abb4-8a777d1d291a"
     }
   }
 }

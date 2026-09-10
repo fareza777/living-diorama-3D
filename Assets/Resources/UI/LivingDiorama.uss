@@ -1590,3 +1590,71 @@
 .button--primary #skin-label {
     color: rgb(38, 26, 8);
 }
+
+/* ═══════════════════════════════════════════════════════════ build mode ═══
+ *
+ * The bar sits above the tray while you aim. It is not a modal: the world has
+ * to stay visible and draggable, because choosing where a bed goes is a
+ * decision about the place, not about the menu.
+ */
+
+.build {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 104px;
+    padding: 12px;
+    background-image: resource("UI/Art/ld_plate_raised");
+    background-color: rgba(0, 0, 0, 0);
+    -unity-slice-left: 38;
+    -unity-slice-right: 38;
+    -unity-slice-top: 38;
+    -unity-slice-bottom: 38;
+    -unity-slice-scale: 0.42;
+}
+
+.build__hint {
+    font-size: 15px;
+    color: var(--ink);
+    -unity-text-align: middle-center;
+    margin-bottom: 10px;
+    white-space: normal;
+}
+
+.build__hint--bad { color: var(--danger); }
+
+/* One row per thing you own, with how many are left. */
+.stock {
+    flex-direction: row;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 10px;
+    background-image: resource("UI/Art/ld_plate_raised");
+    background-color: rgba(0, 0, 0, 0);
+    -unity-slice-left: 38;
+    -unity-slice-right: 38;
+    -unity-slice-top: 38;
+    -unity-slice-bottom: 38;
+    -unity-slice-scale: 0.42;
+}
+
+.stock__name {
+    font-size: 17px;
+    -unity-font-style: bold;
+    color: var(--ink);
+    flex-grow: 1;
+}
+
+.stock__use {
+    font-size: 13px;
+    color: var(--ink-dim);
+}
+
+.stock__count {
+    font-size: 15px;
+    -unity-font-style: bold;
+    color: var(--gold);
+    margin-right: 12px;
+}
+
+.stock--empty { opacity: 0.45; }

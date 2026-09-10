@@ -124,8 +124,18 @@ namespace LivingDiorama.EditorTools
                 return false;
             }
 
+            // A separately rigged model wins as the prefab, if one is sitting next to the
+            // clips. Meshy's rigging returns the character on its own, with no animation
+            // in it, so it cannot double as the clip carrier the way the idle export does
+            // -- but it is the model the game should actually show. The clips still bind,
+            // because Meshy names the bones identically every time.
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                $"{CreaturesDir}/{creature}/{creature}_rigged.fbx") ?? rigModel;
+
+            if (prefab != rigModel) ConfigureRig($"{CreaturesDir}/{creature}/{creature}_rigged.fbx");
+
             AnimatorController controller = BuildController(creature, clips);
-            Assign(creature, rigModel, controller);
+            Assign(creature, prefab, controller);
 
             Debug.Log($"[AnimationImporter] {creature}: {clips.Count} clips ({string.Join(", ", clips.Keys)})");
             return true;

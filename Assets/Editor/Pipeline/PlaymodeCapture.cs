@@ -48,6 +48,7 @@ namespace LivingDiorama.EditorTools
             (26f, "04_turntable"),
             (34f, "05_night"),
             (44f, "06_roster"),
+            (58f, "07_built"),
         };
 
         /// <summary>Entering play mode reloads the domain, which wipes statics and the
@@ -123,6 +124,7 @@ namespace LivingDiorama.EditorTools
             {
                 if (Schedule[_next].name == "03b_emotes") ForceEmotes();
                 if (Schedule[_next].name == "06_roster") SpawnRoster();
+                if (Schedule[_next].name == "07_built") BuildFurniture();
 
                 RequestCapture(Schedule[_next].name);
                 _next++;
@@ -228,6 +230,65 @@ namespace LivingDiorama.EditorTools
             }
 
             Debug.Log($"[PlaymodeCapture] spawned {placed} species across {spots.Count} spots around {centre}");
+        }
+
+        /// <summary>
+        /// Put one of everything down near a creature, so the shot shows the thing the
+        /// build mode exists for: a goblin actually walking over and using it.
+        ///
+        /// Placed by the same service the player's taps go through, so what this proves
+        /// is the real path -- validity checks, obstacles and all -- rather than a
+        /// debug spawn that skips them.
+        /// </summary>
+        static void BuildFurniture()
+        {
+            var sim = UnityEngine.Object.FindFirstObjectByType<EcosystemSimulation>();
+            LivingDiorama.Diorama.PlacementService placements = sim != null ? sim.Placements : null;
+            if (placements == null || !placements.IsReady) return;
+
+            Vector3 anchor = Vector3.zero;
+            foreach (CreatureAgent existing in sim.Agents)
+            {
+                anchor = existing.Position;
+                break;
+            }
+
+            int built = 0;
+            var centre = Vector3.zero;
+
+            foreach (LivingDiorama.Diorama.Placeable placeable in LivingDiorama.Diorama.Placeables.All)
+            {
+                for (int attempt = 0; attempt < 80; attempt++)
+                {
+                    float angle = built * 1.57f + attempt * 0.31f;
+                    float radius = 1.0f + attempt * 0.035f;
+                    var spot = new Vector3(
+                        anchor.x + Mathf.Cos(angle) * radius, 0f, anchor.z + Mathf.Sin(angle) * radius);
+                    spot.y = sim.Surface.SampleHeight(spot);
+
+                    if (!placements.CanPlaceAt(spot, placeable.Radius, out string _)) continue;
+
+                    // Turned to face the middle of the group, so the shot shows their
+                    // fronts rather than four backs.
+                    float facing = Mathf.Atan2(anchor.x - spot.x, anchor.z - spot.z) * Mathf.Rad2Deg;
+                    placements.Place(placeable.Id, spot, facing);
+
+                    centre += spot;
+                    built++;
+                    break;
+                }
+            }
+
+            if (built > 0) centre /= built;
+
+            var camera = UnityEngine.Object.FindFirstObjectByType<DioramaCamera>();
+            if (camera != null)
+            {
+                camera.Turntable = false;
+                camera.SetScriptedShot(centre + Vector3.up * 0.25f, 25f, 22f, 4.4f);
+            }
+
+            Debug.Log($"[PlaymodeCapture] built {built} placeable(s) around {centre}");
         }
 
         static bool Submerged(EcosystemSimulation sim, ref Vector3 spot)
