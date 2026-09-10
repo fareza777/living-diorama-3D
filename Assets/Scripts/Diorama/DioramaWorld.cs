@@ -463,6 +463,30 @@ namespace LivingDiorama.Diorama
         readonly Dictionary<BiomeDefinition.PropKind, float> _naturalHeight = new(8);
 
         /// <summary>How tall the generated version of a prop stands, measured once.</summary>
+        /// <summary>
+        /// How tall a grazing bush should stand, in world units.
+        ///
+        /// Taken from the biome's own bush scatter entry, so a food bush is the size of
+        /// the bushes growing around it. Library meshes are normalised to unit height, so
+        /// without this a food bush would be exactly one metre tall regardless of what
+        /// the rest of the plants in that biome look like.
+        /// </summary>
+        float BushHeight(BiomeDefinition biome)
+        {
+            const float fallback = 0.62f;
+            if (biome.scatter == null) return fallback;
+
+            foreach (BiomeDefinition.ScatterEntry entry in biome.scatter)
+            {
+                if (entry.kind != BiomeDefinition.PropKind.Bush) continue;
+
+                float mid = (entry.scaleRange.x + entry.scaleRange.y) * 0.5f;
+                return NaturalHeight(entry) * Mathf.Max(0.1f, mid);
+            }
+
+            return fallback;
+        }
+
         float NaturalHeight(BiomeDefinition.ScatterEntry entry)
         {
             if (_naturalHeight.TryGetValue(entry.kind, out float cached)) return cached;
@@ -478,7 +502,32 @@ namespace LivingDiorama.Diorama
         /// <summary>Re-dress every tile, after modelled scenery has finished loading.</summary>
         public void RefreshScatter()
         {
-            foreach (KeyValuePair<Vector2Int, DioramaTile> kv in _tiles) BuildScatter(kv.Value);
+            foreach (KeyValuePair<Vector2Int, DioramaTile> kv in _tiles)
+            {
+                BuildScatter(kv.Value);
+
+                // The food bushes too. The library finishes loading after the first tile
+                // is already standing, so a bush a creature grazes from kept the generated
+                // mesh it was built with while every bush around it was upgraded -- three
+                // brown lumps on the lawn, in a diorama of modelled plants.
+                foreach (FoodNode node in kv.Value.Food) RestyleFood(kv.Value, node);
+            }
+        }
+
+        /// <summary>Swap one food node's visual over to the modelled bush, if there is
+        /// one and this node is a bush rather than the berry stockpile.</summary>
+        void RestyleFood(DioramaTile tile, FoodNode node)
+        {
+            if (node == null || node.isStockpile || node.bounty == null) return;
+            if (Props == null || !Props.Has(BiomeDefinition.PropKind.Bush)) return;
+
+            var filter = node.bounty.GetComponent<MeshFilter>();
+            var renderer = node.bounty.GetComponent<MeshRenderer>();
+            if (filter == null || renderer == null) return;
+
+            filter.sharedMesh = Props.Mesh(BiomeDefinition.PropKind.Bush);
+            renderer.sharedMaterial = ModelledMaterial(BiomeDefinition.PropKind.Bush);
+            node.bounty.transform.localScale = Vector3.one * BushHeight(tile.Biome);
         }
 
         /// <summary>Modelled scenery, if any was loaded. Null means everything falls back
@@ -594,13 +643,28 @@ namespace LivingDiorama.Diorama
 
                 // The stockpile is a basket of berries; ordinary nodes are a bush the
                 // creature grazes from. Different silhouettes so theft reads clearly.
+                //
+                // The grazing bush is the modelled one wherever it loaded. Left
+                // procedural it sat next to the modelled bushes of the scatter looking
+                // like a brown crate someone had left on the lawn -- the same plant,
+                // drawn two different ways, a few metres apart.
+                bool modelled = i != 0 && Props != null && Props.Has(BiomeDefinition.PropKind.Bush);
+
                 Mesh mesh = i == 0
                     ? ProceduralMeshes.BerryPile(seed, new Color(0.55f, 0.36f, 0.20f), new Color(0.82f, 0.18f, 0.28f))
-                    : ProceduralMeshes.Bush(seed, tile.Biome.groundHigh * 0.85f);
+                    : modelled
+                        ? Props.Mesh(BiomeDefinition.PropKind.Bush)
+                        : ProceduralMeshes.Bush(seed, tile.Biome.groundHigh * 0.85f);
 
                 visual.AddComponent<MeshFilter>().sharedMesh = mesh;
-                visual.AddComponent<MeshRenderer>().sharedMaterial = _propMaterial;
-                visual.transform.localScale = Vector3.one * (i == 0 ? 1.15f : 0.9f);
+                visual.AddComponent<MeshRenderer>().sharedMaterial = modelled
+                    ? ModelledMaterial(BiomeDefinition.PropKind.Bush)
+                    : _propMaterial;
+
+                // Library meshes are normalised to unit height, so they need the real
+                // one back; the procedural bush is already the size it should be.
+                visual.transform.localScale = Vector3.one *
+                    (i == 0 ? 1.15f : modelled ? BushHeight(tile.Biome) : 0.9f);
 
                 var node = go.AddComponent<FoodNode>();
                 node.isStockpile = i == 0;

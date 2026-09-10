@@ -458,8 +458,12 @@
     background-color: rgba(0, 0, 0, 0.55);
 }
 
+/* Two lines' worth of room whether the name needs it or not. "Timber Wolf" wraps
+   and "Slime" does not, and a grid whose rows start at different heights depending
+   on how long a name happens to be does not read as a grid. */
 .card__name {
     font-size: 15px;
+    height: 40px;
     -unity-font-style: bold;
     color: var(--ink);
     -unity-text-align: middle-center;
@@ -1061,6 +1065,22 @@
     justify-content: flex-end;
     align-items: center;
     overflow: hidden;
+}
+
+/* The inspector fills the screen: the model gets whatever height the text and the
+   buttons do not need. */
+.modal__card--tall {
+    width: 96%;
+    max-width: 560px;
+    height: 92%;
+    max-height: 92%;
+}
+
+.viewport--full {
+    flex-grow: 1;
+    height: auto;
+    min-height: 320px;
+    margin-bottom: 14px;
 }
 
 .viewport__hint {

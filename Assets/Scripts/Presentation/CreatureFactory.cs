@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using GLTFast;
 using LivingDiorama.Data;
+using LivingDiorama.Presentation.Rigging;
 using UnityEngine;
 
 namespace LivingDiorama.Presentation
@@ -66,6 +67,12 @@ namespace LivingDiorama.Presentation
             instance.name = $"Model_{def.id}";
             instance.transform.localRotation = Quaternion.Euler(def.modelEuler);
             Normalise(instance, def);
+
+            // A mesh that arrived without a skeleton gets one fitted here, before the
+            // materials are swapped, so the skinned renderer it leaves behind is the one
+            // that gets restyled.
+            ProceduralRig.Apply(instance, ProceduralRig.ShapeFor(def));
+
             Restyle(instance, def);
             return instance;
         }
@@ -222,6 +229,11 @@ namespace LivingDiorama.Presentation
                 // renderer's. Either one puts the feet in the wrong place: measured
                 // against the ground, the goblin stood a fifth of a unit underneath it.
                 // Baking the pose gives the vertices where they actually are.
+                //
+                // The baked vertices belong to the renderer's transform, not to the root
+                // bone -- checked by measuring both against a creature known to be
+                // standing on the floor, because the two differ by a plausible-looking
+                // few centimetres and picking the wrong one is invisible.
                 Bounds wb;
 
                 if (r is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)

@@ -97,6 +97,15 @@ namespace LivingDiorama.EditorTools
             urp.msaaSampleCount = 4;
             urp.renderScale = 1f;
 
+            // The water is written against both of these and quietly falls back without
+            // them: no depth means every pixel reads as the same depth, so the river loses
+            // its shallow-to-deep gradient and its shoreline foam entirely and renders as
+            // one flat sheet of blue. The opaque copy is what lets it refract the riverbed.
+            // On a scene this small the two passes are cheap, and the difference between
+            // water and a blue plane is not.
+            urp.supportsCameraDepthTexture = true;
+            urp.supportsCameraOpaqueTexture = true;
+
             urp.shadowDistance = 34f;
             urp.shadowCascadeCount = 1;
             urp.shadowDepthBias = 0.6f;

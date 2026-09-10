@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using LivingDiorama.Data;
 using LivingDiorama.Presentation;
+using LivingDiorama.Presentation.Rigging;
 using UnityEngine;
 
 namespace LivingDiorama.UI
@@ -21,21 +22,33 @@ namespace LivingDiorama.UI
     {
         const float StageDepth = -400f;
 
-        // Matches the viewport's shape. A square texture stretched into a wide panel put
-        // the creature in the wrong place and the wrong proportions.
-        const int Width = 704;
-        const int Height = 400;
+        // The inspector is a tall panel that fills the screen, so the texture is tall
+        // too. It is stretched to whatever the layout gives the viewport; the camera is
+        // told that shape separately, which is what keeps the creature in proportion.
+        const int Width = 768;
+        const int Height = 1024;
 
         Camera _camera;
         Transform _pivot;
         GameObject _current;
+        CreatureRig _rig;
         CreatureFactory _factory;
         string _currentId;
 
-        /// <summary>Framing distance for the current model. Held separately because
-        /// deriving it from the camera's own position each frame fed back on itself and
-        /// crept the camera slowly into the creature's face.</summary>
-        float _baseDistance = 2f;
+        /// <summary>Half the size of the model on the stand. Framing is worked out from
+        /// this each frame rather than from the camera's own position, which fed back on
+        /// itself and crept the camera slowly into the creature's face.</summary>
+        Vector3 _extents = Vector3.one * 0.5f;
+
+        float _aspect = Width / (float)Height;
+
+        /// <summary>The shape of the panel the texture is being stretched across. Framing
+        /// a tall creature for a wide box and then showing it in a tall one is how a model
+        /// ends up squashed and half out of frame.</summary>
+        public float ViewportAspect
+        {
+            set => _aspect = Mathf.Clamp(value, 0.25f, 4f);
+        }
 
         public RenderTexture Texture { get; private set; }
 
@@ -121,11 +134,13 @@ namespace LivingDiorama.UI
             if (_currentId == def.id && _current != null) return;
 
             if (_current != null) Destroy(_current);
+            _rig = null;
             _currentId = def.id;
 
             _current = await _factory.CreateAsync(def, _pivot);
             if (_current == null) return;
 
+            _rig = _current.GetComponentInChildren<CreatureRig>();
             _current.transform.localPosition = Vector3.zero;
             Frame();
         }
@@ -146,12 +161,7 @@ namespace LivingDiorama.UI
             // Centre the model on the camera's axis.
             _pivot.localPosition -= bounds.center - _pivot.position;
 
-            // Fit the taller of the two axes, since the panel is wider than it is high.
-            float half = Mathf.Max(bounds.extents.y, bounds.extents.x / _camera.aspect);
-            _baseDistance = half / Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * 1.25f;
-
-            _camera.transform.localPosition = new Vector3(0f, 0f, -_baseDistance);
-            _camera.transform.localRotation = Quaternion.identity;
+            _extents = bounds.extents;
         }
 
         /// <summary>Render one frame. Called by the panel while it is on screen.</summary>
@@ -159,9 +169,20 @@ namespace LivingDiorama.UI
         {
             if (_current == null) return;
 
+            // Breathing, tail, wings: a creature standing perfectly still on a plinth
+            // reads as a statue of itself.
+            _rig?.Pose(new RigPose { Phase = Time.time * 1.5f });
+
             _pivot.localRotation = Quaternion.Euler(0f, Yaw, 0f);
 
-            float distance = _baseDistance / Mathf.Max(0.35f, Zoom);
+            _camera.aspect = _aspect;
+
+            // Fit whichever axis runs out of room first for the shape of panel we are
+            // actually being drawn into.
+            float half = Mathf.Max(_extents.y, _extents.x / _aspect, _extents.z / _aspect);
+            float baseDistance = half / Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * 1.06f;
+
+            float distance = baseDistance / Mathf.Max(0.35f, Zoom);
             Quaternion orbit = Quaternion.Euler(Pitch, 0f, 0f);
             _camera.transform.localPosition = orbit * new Vector3(0f, 0f, -distance);
             _camera.transform.localRotation = orbit;

@@ -88,6 +88,14 @@ namespace LivingDiorama.Presentation
             return t * t * (3f - 2f * t);
         }
 
+        /// <summary>The shape field behind an icon, in the same -1..1 square the
+        /// renderer works in: negative inside the shape, positive outside.
+        ///
+        /// Exposed so a test can assert an icon is the shape it claims to be. Checking
+        /// only that a texture came out non-empty passed happily while every icon was a
+        /// filled square, and again while the heart was upside down.</summary>
+        public static float SignedDistance(Mood mood, Vector2 p) => Distance(mood, p);
+
         static float Distance(Mood mood, Vector2 p) => mood switch
         {
             Mood.Social => Heart(p * 1.25f),
@@ -115,9 +123,14 @@ namespace LivingDiorama.Presentation
 
         static float Heart(Vector2 p)
         {
-            // Standard implicit heart, flipped so the point faces down.
-            p.y = -p.y;
-            p.y += 0.22f;
+            // The implicit heart x^2 + (y - cbrt(x^2))^2 = r^2 already points downwards
+            // with y up: at x = 0 the lower branch reaches y = -r and the upper one
+            // bulges out into the two lobes. Flipping it, as this used to, turned it on
+            // its head -- which is how it read over the creatures' heads.
+            //
+            // The shift is only centring: the shape spans about -r to +1.5r, so nudging
+            // it down puts the middle of the heart in the middle of the tile.
+            p.y += 0.16f;
             float x2 = p.x * p.x;
             float y = p.y - Mathf.Pow(x2, 1f / 3f) * 0.9f;
             return (new Vector2(p.x, y).magnitude - 0.62f) * 0.55f;

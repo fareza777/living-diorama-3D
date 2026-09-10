@@ -47,6 +47,7 @@ namespace LivingDiorama.EditorTools
             (21f, "03b_emotes"),
             (26f, "04_turntable"),
             (34f, "05_night"),
+            (44f, "06_roster"),
         };
 
         /// <summary>Entering play mode reloads the domain, which wipes statics and the
@@ -109,7 +110,7 @@ namespace LivingDiorama.EditorTools
             }
 
             // Turntable on for the later shots so they are not all the same angle.
-            if (_elapsed > 20f) SetTurntable(true);
+            if (_elapsed > 20f && _next < Schedule.Length - 1) SetTurntable(true);
 
             // A capture spans several frames, so nothing else is scheduled until it lands.
             if (_pendingName != null)
@@ -121,6 +122,7 @@ namespace LivingDiorama.EditorTools
             if (_next < Schedule.Length && _elapsed >= Schedule[_next].at)
             {
                 if (Schedule[_next].name == "03b_emotes") ForceEmotes();
+                if (Schedule[_next].name == "06_roster") SpawnRoster();
 
                 RequestCapture(Schedule[_next].name);
                 _next++;
@@ -152,6 +154,86 @@ namespace LivingDiorama.EditorTools
 
             begin.Invoke(title, null);
             Debug.Log("[PlaymodeCapture] pressed Begin");
+        }
+
+        /// <summary>
+        /// Put one of every species on the ground at once.
+        ///
+        /// A fresh save starts with a goblin and two slimes, so four of the six creatures
+        /// were never in a single picture -- which meant the rigs fitted to the wolf, the
+        /// dragon and the skeleton could not be looked at without playing the game for an
+        /// hour first. This is the shot that shows all of them.
+        /// </summary>
+        static void SpawnRoster()
+        {
+            var sim = UnityEngine.Object.FindFirstObjectByType<EcosystemSimulation>();
+            LivingDiorama.Data.GameDatabase db = LivingDiorama.Data.GameDatabase.Instance;
+            if (sim == null || sim.Surface == null || db == null) return;
+
+            // Somewhere dry, near a creature that is already standing somewhere valid.
+            // Guessing at world coordinates does not work: the first tile is not centred
+            // on the origin, so a scan around zero found nothing at all.
+            Vector3 anchor = Vector3.zero;
+            foreach (CreatureAgent existing in sim.Agents)
+            {
+                anchor = existing.Position;
+                break;
+            }
+
+            var spots = new List<Vector3>(6);
+            for (float z = -5f; z <= 5f && spots.Count < 6; z += 0.3f)
+            {
+                for (float x = -5f; x <= 5f && spots.Count < 6; x += 0.3f)
+                {
+                    var spot = new Vector3(anchor.x + x, 0f, anchor.z + z);
+                    if (Submerged(sim, ref spot) || !sim.Surface.Contains(spot)) continue;
+                    if ((sim.Surface.ResolveObstacles(spot, 0.3f) - spot).sqrMagnitude > 0.0001f) continue;
+
+                    bool crowded = false;
+                    foreach (Vector3 taken in spots)
+                    {
+                        if ((taken - spot).sqrMagnitude < 0.85f * 0.85f) crowded = true;
+                    }
+                    if (!crowded) spots.Add(spot);
+                }
+            }
+
+            if (spots.Count == 0)
+            {
+                Debug.LogWarning("[PlaymodeCapture] nowhere dry to put the roster");
+                return;
+            }
+
+            int placed = 0;
+            var centre = Vector3.zero;
+
+            foreach (LivingDiorama.Data.CreatureDefinition def in db.creatures)
+            {
+                if (def == null) continue;
+
+                Vector3 spot = spots[placed % spots.Count];
+                centre += spot;
+                sim.Spawn(def, $"capture_{def.id}", spot);
+                placed++;
+            }
+
+            centre /= Mathf.Max(1, placed);
+
+            // Low and close, so the ground line under their feet is actually visible.
+            var camera = UnityEngine.Object.FindFirstObjectByType<DioramaCamera>();
+            if (camera != null)
+            {
+                camera.Turntable = false;
+                camera.SetScriptedShot(centre + Vector3.up * 0.35f, 28f, 16f, 5.6f);
+            }
+
+            Debug.Log($"[PlaymodeCapture] spawned {placed} species across {spots.Count} spots around {centre}");
+        }
+
+        static bool Submerged(EcosystemSimulation sim, ref Vector3 spot)
+        {
+            spot.y = sim.Surface.SampleHeight(spot);
+            return sim.Surface.TryGetWater(spot, out float water) && spot.y <= water + 0.03f;
         }
 
         static void SetTurntable(bool on)
@@ -326,14 +408,20 @@ namespace LivingDiorama.EditorTools
             {
                 if (agent.View == null || !agent.View.ModelReady) continue;
 
-                float lowest = float.MaxValue;
-                foreach (Renderer r in agent.GetComponentsInChildren<Renderer>())
-                {
-                    if (r is ParticleSystemRenderer) continue;
-                    lowest = Mathf.Min(lowest, r.bounds.min.y);
-                }
-                if (lowest > float.MaxValue * 0.5f) continue;
+                // Measured from the posed mesh, not from Renderer.bounds: on a skinned
+                // creature that box is padded so no animation can escape it, and a
+                // padded box reports hover that is not there.
+                if (!agent.View.TryGetModelBounds(out Bounds model)) continue;
+                float lowest = model.min.y;
 
+                // Ground height where the creature stands. Worth knowing what this number
+                // is not: the model's lowest point is a corner of a box, and on sloping
+                // ground the terrain under that corner is not the terrain under the
+                // creature's feet. Anything inside about a tenth of a unit is that
+                // difference rather than a creature off the floor -- taking the lowest
+                // ground under the whole footprint instead just swaps the error for the
+                // opposite one, and reported a skeleton standing on a bank as six
+                // tenths of a unit airborne.
                 float ground = sim.Surface.SampleHeight(agent.transform.position);
 
                 // How far the scenery had to push this creature back out of itself. A

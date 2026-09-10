@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using LivingDiorama.Data;
+using LivingDiorama.Presentation.Rigging;
 using LivingDiorama.Simulation;
 using UnityEngine;
 
@@ -8,10 +9,11 @@ namespace LivingDiorama.Presentation
     /// <summary>
     /// Everything the player actually sees of a creature.
     ///
-    /// The generated meshes have no skeleton and no animation clips, so all motion is
-    /// procedural: a gait cycle drives bob, squash-and-stretch, lean and roll, and
-    /// one-shot impulses layer reactions on top. The upshot is that any new GLB dropped
-    /// into the game moves believably on arrival, with no rigging step at all.
+    /// A creature moves by one of three routes, in descending order of fidelity: real
+    /// clips on a real skeleton; a skeleton fitted to the mesh by <see cref="ProceduralRig"/>
+    /// and posed here; or, failing both, the whole body bobbing and leaning as one piece.
+    /// Whichever it turns out to be, the gait cycle, the reactions and the sleep and
+    /// knockout blends are the same, so a new GLB dropped into the game moves on arrival.
     /// </summary>
     public sealed class CreatureView : MonoBehaviour
     {
@@ -23,6 +25,7 @@ namespace LivingDiorama.Presentation
         CreatureDefinition _def;
         Transform _modelRoot;
         GameObject _model;
+        CreatureRig _rig;
         EmoteBubble _emote;
 
         float _phase;
@@ -32,6 +35,7 @@ namespace LivingDiorama.Presentation
 
         bool _sleeping;
         float _sleepBlend;
+
         float _sleepVelocity;
 
         float _knockBlend;
@@ -40,6 +44,7 @@ namespace LivingDiorama.Presentation
         Reaction _reaction;
         float _reactionTime;
         float _reactionDuration = 1f;
+        float _reactionPulse;
         Vector3 _reactionDirection = Vector3.forward;
 
         // Smoothed output state, so nothing ever pops.
@@ -75,6 +80,7 @@ namespace LivingDiorama.Presentation
             }
 
             _model = model;
+            _rig = _model.GetComponentInChildren<CreatureRig>();
             BindAnimator();
             ModelReady = true;
             PlaySpawn();
@@ -169,6 +175,18 @@ namespace LivingDiorama.Presentation
             var mr = go.GetComponent<MeshRenderer>();
             mr.sharedMaterial = new Material(mr.sharedMaterial) { color = new Color(0.8f, 0.3f, 0.7f) };
             return go;
+        }
+
+        /// <summary>World-space bounds of the model as it is posed right now.
+        ///
+        /// Exposed for the capture harness, which measures how far each creature's lowest
+        /// point sits above the ground. Reading Renderer.bounds there would have been
+        /// quietly wrong the moment creatures became skinned: that box is padded for
+        /// culling, so it reports a hover that is not there and hides one that is.</summary>
+        public bool TryGetModelBounds(out Bounds bounds)
+        {
+            bounds = default;
+            return _model != null && CreatureFactory.TryGetWorldBounds(_model, out bounds);
         }
 
         // ---- API used by behaviours -----------------------------------------
@@ -285,6 +303,7 @@ namespace LivingDiorama.Presentation
             ApplyReaction(dt, ref offset, ref euler, ref scale);
             ApplySleep(ref offset, ref euler, ref scale);
             ApplyKnockOut(ref offset, ref euler, ref scale);
+            ApplyRig(ref offset, ref scale);
 
             // Smoothing pass. Everything above computes a target; this is what makes the
             // result read as animation rather than a per-frame jitter of formulas.
@@ -298,6 +317,54 @@ namespace LivingDiorama.Presentation
 
             if (_emote != null) _emote.Tick(dt);
         }
+
+        /// <summary>
+        /// Hand the frame over to the fitted skeleton, and stop the body doing the legs'
+        /// job.
+        ///
+        /// A creature with legs must not also bob: the bob was standing in for a walk
+        /// cycle, and now that the legs really swing, adding it on top lifts both feet
+        /// clear of the ground at every stride -- the hovering that is obvious the moment
+        /// you look down at a creature's feet. The only vertical movement left is the drop
+        /// that keeps the planted foot on the floor. A blob has no legs to carry it, so it
+        /// keeps its hop.
+        /// </summary>
+        void ApplyRig(ref Vector3 offset, ref Vector3 scale)
+        {
+            if (_rig == null) return;
+
+            _rig.Pose(new RigPose
+            {
+                Phase = _phase,
+                Gait = _gait,
+                Sleep = _sleepBlend,
+                KnockOut = _knockBlend,
+                Action = ActionFor(_reaction),
+                ActionPulse = _reaction == Reaction.None ? 0f : _reactionPulse,
+            });
+
+            if (!_rig.HasFeet) return;
+
+            // The rig now plants its own feet, so the body must stop bouncing: the bob was
+            // standing in for a walk cycle, and adding it on top lifts both feet clear of
+            // the ground at every stride. A creature that hovers on purpose keeps its
+            // hover; everything else stands on the floor.
+            if (_def.locomotion != LocomotionStyle.Float) offset.y = Mathf.Min(offset.y, 0f);
+
+            // Squash was the other half of the stand-in gait. Left at full strength it
+            // now fights the skeleton, so it stays only as a trace of weight.
+            scale = Vector3.Lerp(Vector3.one, scale, 0.35f);
+        }
+
+        static RigAction ActionFor(Reaction reaction) => reaction switch
+        {
+            Reaction.Eat => RigAction.Eat,
+            Reaction.Attack => RigAction.Attack,
+            Reaction.None => RigAction.None,
+            // Everything else is a jolt of one kind or another and reads the same on the
+            // skeleton: head back, shoulders up.
+            _ => RigAction.Startle,
+        };
 
         float GaitFrequency()
         {
@@ -372,7 +439,9 @@ namespace LivingDiorama.Presentation
                 }
 
                 case LocomotionStyle.Float:
-                    offset.y = h * 0.14f + (Mathf.Sin(_phase * 0.5f) * 0.5f + 0.5f) * amp * 2f;
+                    // Skimming the ground, not levitating over it: half a body height of
+                    // clear air under a creature reads as a bug rather than as flight.
+                    offset.y = h * 0.05f + (Mathf.Sin(_phase * 0.5f) * 0.5f + 0.5f) * amp * 1.1f;
                     euler.z = Mathf.Sin(_phase * 0.33f) * 5f;
                     euler.x = 4f * g;
                     squash = Mathf.Sin(_phase * 0.5f) * 0.05f;
@@ -415,11 +484,13 @@ namespace LivingDiorama.Presentation
             if (t >= 1f)
             {
                 _reaction = Reaction.None;
+                _reactionPulse = 0f;
                 return;
             }
 
             // Fast attack, slow settle -- reads as intent followed by recovery.
             float pulse = Mathf.Sin(Mathf.Pow(t, 0.55f) * Mathf.PI);
+            _reactionPulse = pulse;
             float h = _def.bodyHeight;
 
             switch (_reaction)

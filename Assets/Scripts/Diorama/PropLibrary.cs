@@ -53,7 +53,15 @@ namespace LivingDiorama.Diorama
 
                 if (filter != null && filter.sharedMesh != null)
                 {
-                    _meshes[kind] = Normalise(filter);
+                    Mesh mesh = Normalise(filter);
+
+                    // The bush came back standing on a slab of ground. Meshy threw one in
+                    // despite being asked not to, and it reads as a crate under every
+                    // bush in the diorama. A prop that sits on the floor has no use for a
+                    // floor of its own.
+                    if (kind == BiomeDefinition.PropKind.Bush) TrimGroundPlate(mesh);
+
+                    _meshes[kind] = mesh;
                 }
 
                 // Prefer the extracted texture.
@@ -83,6 +91,47 @@ namespace LivingDiorama.Diorama
 
                 Object.Destroy(holder);
             }
+        }
+
+        /// <summary>
+        /// Drop the flat disc of ground a generated model was standing on.
+        ///
+        /// Everything near the floor and facing up or down within the bottom slice of the
+        /// model: that is a base plate and nothing else. Real foliage at that height
+        /// faces outwards. Taking it away leaves the underside open, which nobody sees,
+        /// because the thing is sitting on grass.
+        /// </summary>
+        static void TrimGroundPlate(Mesh mesh)
+        {
+            const float slice = 0.10f;      // of the model's own height, which is 1 here
+            const float flatness = 0.80f;   // how vertical a triangle's normal has to be
+
+            Vector3[] vertices = mesh.vertices;
+            int[] triangles = mesh.triangles;
+            var kept = new List<int>(triangles.Length);
+
+            for (int i = 0; i < triangles.Length; i += 3)
+            {
+                Vector3 a = vertices[triangles[i]];
+                Vector3 b = vertices[triangles[i + 1]];
+                Vector3 c = vertices[triangles[i + 2]];
+
+                bool low = a.y < slice && b.y < slice && c.y < slice;
+                bool flat = Mathf.Abs(Vector3.Cross(b - a, c - a).normalized.y) > flatness;
+
+                if (low && flat) continue;
+
+                kept.Add(triangles[i]);
+                kept.Add(triangles[i + 1]);
+                kept.Add(triangles[i + 2]);
+            }
+
+            if (kept.Count == triangles.Length || kept.Count == 0) return;
+
+            mesh.SetTriangles(kept, 0);
+            mesh.RecalculateBounds();
+            Debug.Log($"[PropLibrary] {mesh.name}: dropped {(triangles.Length - kept.Count) / 3} " +
+                      "triangles of base plate");
         }
 
         /// <summary>Bake the hierarchy's transform in, stand the model on y = 0 and scale

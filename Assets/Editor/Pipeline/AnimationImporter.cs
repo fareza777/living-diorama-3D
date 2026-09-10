@@ -37,6 +37,17 @@ namespace LivingDiorama.EditorTools
             "idle", "walk", "run", "sleep", "sneak",
         };
 
+        /// <summary>
+        /// Clips where only the settled part is wanted, and the rest is the character
+        /// getting into or out of it.
+        ///
+        /// Meshy's "Sleep" is a performance: the goblin lies down, then sits back up after
+        /// a second and a half and stays up for the remaining four seconds. Looped, that
+        /// is a creature that goes to bed and gets straight back out of it, over and over,
+        /// which is exactly how it read in the diorama. Only the lying-down part is sleep.
+        /// </summary>
+        static readonly HashSet<string> RestOnly = new() { "sleep" };
+
         [MenuItem("Living Diorama/Import Creature Animations", priority = 3)]
         public static void ImportAll()
         {
@@ -89,7 +100,8 @@ namespace LivingDiorama.EditorTools
                 string name = ClipName(source);
                 ConfigureClipSource(source, source == rigPath, avatar);
 
-                AnimationClip extracted = Extract(source, $"{outDir}/{name}.anim", Looping.Contains(name));
+                AnimationClip extracted = Extract(source, $"{outDir}/{name}.anim",
+                    Looping.Contains(name), RestOnly.Contains(name));
                 if (extracted != null) clips[name] = extracted;
             }
 
@@ -174,7 +186,7 @@ namespace LivingDiorama.EditorTools
         /// with it. Copied out, the model files end up referenced by nothing and are
         /// stripped, and the loop flag can be set per clip without fighting the importer.
         /// </summary>
-        static AnimationClip Extract(string source, string destination, bool loop)
+        static AnimationClip Extract(string source, string destination, bool loop, bool restOnly)
         {
             AnimationClip original = AssetDatabase.LoadAllAssetsAtPath(source)
                 .OfType<AnimationClip>()
@@ -188,6 +200,11 @@ namespace LivingDiorama.EditorTools
 
             var copy = Object.Instantiate(original);
             copy.name = Path.GetFileNameWithoutExtension(destination);
+
+            if (restOnly && TrimToRestingPose(copy))
+            {
+                Debug.Log($"[AnimationImporter] {copy.name}: trimmed to its resting pose ({copy.length:0.00}s)");
+            }
 
             AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(copy);
             settings.loopTime = loop;
@@ -208,6 +225,121 @@ namespace LivingDiorama.EditorTools
 
             AssetDatabase.CreateAsset(copy, destination);
             return copy;
+        }
+
+        /// <summary>
+        /// Cut a clip down to the stretch where the character is actually on the ground.
+        ///
+        /// The hip height tells us where that is without having to know anything about
+        /// the clip: it is near its minimum while the creature is lying down and well
+        /// above it while the creature is upright. Keeping the longest run of keys near
+        /// the floor and rebasing it to start at zero turns a lie-down-and-get-up
+        /// performance into a sleep that loops on itself.
+        ///
+        /// Returns false and leaves the clip alone when it cannot tell -- no hip curve,
+        /// or a clip that never leaves the floor in the first place.
+        /// </summary>
+        static bool TrimToRestingPose(AnimationClip clip)
+        {
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(clip);
+
+            AnimationCurve height = null;
+            foreach (EditorCurveBinding binding in bindings)
+            {
+                if (binding.propertyName != "m_LocalPosition.y") continue;
+                if (!binding.path.EndsWith("Hips", System.StringComparison.OrdinalIgnoreCase)) continue;
+
+                height = AnimationUtility.GetEditorCurve(clip, binding);
+                break;
+            }
+
+            if (height == null || height.length < 4) return false;
+
+            float min = float.MaxValue, max = float.MinValue;
+            foreach (Keyframe key in height.keys)
+            {
+                min = Mathf.Min(min, key.value);
+                max = Mathf.Max(max, key.value);
+            }
+
+            // Everything at one height: the creature never gets up, so there is nothing
+            // here that is not already rest.
+            if (max - min < 0.05f) return false;
+
+            float ceiling = min + (max - min) * 0.25f;
+            if (!LongestRunBelow(height, ceiling, out float from, out float to)) return false;
+            if (to - from < 0.3f) return false;
+
+            foreach (EditorCurveBinding binding in bindings)
+            {
+                AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
+                if (curve == null) continue;
+
+                AnimationUtility.SetEditorCurve(clip, binding, Crop(curve, from, to));
+            }
+
+            return true;
+        }
+
+        /// <summary>The longest stretch of the curve that stays under a value, as a time
+        /// range. Longest rather than first: a clip that stands up before it lies down is
+        /// just as plausible as one that does it the other way round.</summary>
+        static bool LongestRunBelow(AnimationCurve curve, float ceiling, out float from, out float to)
+        {
+            from = to = 0f;
+            float best = 0f;
+            float runStart = float.NaN;
+
+            Keyframe[] keys = curve.keys;
+            for (int i = 0; i <= keys.Length; i++)
+            {
+                bool low = i < keys.Length && keys[i].value <= ceiling;
+
+                if (low && float.IsNaN(runStart)) runStart = keys[i].time;
+
+                if (!low && !float.IsNaN(runStart))
+                {
+                    float runEnd = keys[i - 1].time;
+                    if (runEnd - runStart > best)
+                    {
+                        best = runEnd - runStart;
+                        from = runStart;
+                        to = runEnd;
+                    }
+                    runStart = float.NaN;
+                }
+            }
+
+            return best > 0f;
+        }
+
+        /// <summary>
+        /// A curve limited to a time window and rebased so it starts at zero.
+        ///
+        /// The closing key repeats the opening one rather than sampling the far end of
+        /// the window. A resting loop that ends a few centimetres from where it began
+        /// twitches once a cycle, and a twitch is exactly what a sleeping creature must
+        /// not do; ending where it started costs a little drift nobody can see and buys a
+        /// loop with no seam in it.
+        /// </summary>
+        static AnimationCurve Crop(AnimationCurve curve, float from, float to)
+        {
+            var keys = new List<Keyframe>(curve.length + 2)
+            {
+                new(0f, curve.Evaluate(from)),
+            };
+
+            foreach (Keyframe key in curve.keys)
+            {
+                if (key.time <= from + 1e-4f || key.time >= to - 1e-4f) continue;
+
+                Keyframe shifted = key;
+                shifted.time = key.time - from;
+                keys.Add(shifted);
+            }
+
+            keys.Add(new Keyframe(to - from, curve.Evaluate(from)));
+            return new AnimationCurve(keys.ToArray());
         }
 
         // ---- controller ------------------------------------------------------

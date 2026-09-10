@@ -109,26 +109,35 @@
             <ui:Label class="modal__title" text="Collection" />
             <ui:Label name="collection-progress" class="modal__subtitle" text="0 of 0 discovered" />
 
-            <ui:ScrollView name="collection-grid" style="max-height: 380px;">
+            <ui:ScrollView name="collection-grid" style="max-height: 560px;">
                 <ui:VisualElement name="collection-grid-inner" class="grid" />
             </ui:ScrollView>
 
-            <ui:VisualElement name="collection-detail" class="panel panel--raised hidden"
-                              style="margin-top: 10px;">
-                <ui:VisualElement name="collection-viewport" class="viewport">
-                    <ui:Label class="viewport__hint" text="drag to turn  ·  pinch to zoom" />
-                </ui:VisualElement>
-                <ui:Label name="collection-detail-name" class="inspector__name" text="" />
-                <ui:Label name="collection-detail-flavour" class="modal__subtitle" text="" />
-                <ui:Label name="collection-detail-tags" class="level__label" text="" />
-                <ui:VisualElement class="row" style="margin-top: 10px;">
-                    <ui:Button name="btn-place" class="button button--primary" text="Place in diorama"
-                               style="flex-grow: 1;" />
-                </ui:VisualElement>
-            </ui:VisualElement>
+            <ui:Label name="collection-hint" class="modal__subtitle" text="Tap a creature to look at it up close."
+                      style="margin-top: 10px;" />
 
             <ui:Button name="btn-collection-close" class="button button--ghost" text="Close"
                        style="margin-top: 12px;" />
+        </ui:VisualElement>
+
+        <!-- ======================================================= inspect -->
+        <!-- A creature the size of a thumbnail is a spreadsheet entry. This is the
+             screen the collection exists for, so it gets the whole screen. -->
+        <ui:VisualElement name="modal-inspect" class="modal__card modal__card--tall hidden">
+            <ui:VisualElement name="inspect-viewport" class="viewport viewport--full">
+                <ui:Label class="viewport__hint" text="drag to turn  ·  pinch to zoom  ·  double tap to reset" />
+            </ui:VisualElement>
+
+            <ui:Label name="inspect-name" class="modal__title" text="" />
+            <ui:Label name="inspect-flavour" class="modal__subtitle" text="" />
+            <ui:Label name="inspect-tags" class="level__label" text="" />
+
+            <ui:VisualElement class="row" style="margin-top: 12px;">
+                <ui:Button name="btn-inspect-back" class="button button--ghost" text="Back"
+                           style="flex-grow: 1;" />
+                <ui:Button name="btn-inspect-place" class="button button--primary" text="Place in diorama"
+                           style="flex-grow: 2; margin-left: 10px;" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <!-- ===================================================== chronicle -->

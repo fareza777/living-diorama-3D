@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using LivingDiorama.Audio;
 using LivingDiorama.Core;
+using LivingDiorama.Data;
 using LivingDiorama.Meta;
 using LivingDiorama.Presentation;
 using LivingDiorama.Simulation;
@@ -47,6 +48,7 @@ namespace LivingDiorama.UI
 
         BoxPanel _boxPanel;
         CollectionPanel _collectionPanel;
+        InspectPanel _inspectPanel;
         ChroniclePanel _chroniclePanel;
         CreatureStage _creatureStage;
         Button _chronicleButton;
@@ -125,6 +127,7 @@ namespace LivingDiorama.UI
         {
             _boxPanel = new BoxPanel(_root.Q<VisualElement>("modal-box"), _game, this);
             _collectionPanel = new CollectionPanel(_root.Q<VisualElement>("modal-collection"), _game, this);
+            _inspectPanel = new InspectPanel(_root.Q<VisualElement>("modal-inspect"), _game, this);
             _chroniclePanel = new ChroniclePanel(_root.Q<VisualElement>("modal-chronicle"), _game, this);
             _expandPanel = new ExpandPanel(_root.Q<VisualElement>("modal-expand"), _game, this);
             _welcome = new WelcomePanel(_root.Q<VisualElement>("modal-welcome"), _game, this);
@@ -143,7 +146,7 @@ namespace LivingDiorama.UI
         void WireButtons()
         {
             _root.Q<Button>("btn-box").clicked += () => { Click(); OpenModal(_boxPanel.Root, _boxPanel.Refresh); };
-            _root.Q<Button>("btn-collection").clicked += () => { Click(); OpenModal(_collectionPanel.Root, _collectionPanel.Refresh); };
+            _root.Q<Button>("btn-collection").clicked += () => { Click(); OpenCollection(); };
             _root.Q<Button>("btn-expand").clicked += () => { Click(); OpenModal(_expandPanel.Root, _expandPanel.Refresh); };
 
             _chronicleButton = _root.Q<Button>("btn-chronicle");
@@ -337,7 +340,7 @@ namespace LivingDiorama.UI
         public void AttachCreatureStage(CreatureStage stage)
         {
             _creatureStage = stage;
-            _collectionPanel?.AttachStage(stage);
+            _inspectPanel?.AttachStage(stage);
         }
 
         void OpenSettings()
@@ -357,7 +360,7 @@ namespace LivingDiorama.UI
 
             // The earning rate is derived from every creature's wellbeing, so recomputing
             // it every frame would be wasteful for a number that changes slowly.
-            if (_openModals.Contains(_collectionPanel.Root)) _collectionPanel.Tick();
+            if (_openModals.Contains(_inspectPanel.Root)) _inspectPanel.Tick();
 
             _hudRefreshTimer -= Time.deltaTime;
             if (_hudRefreshTimer <= 0f)
@@ -433,6 +436,16 @@ namespace LivingDiorama.UI
         }
 
         // ---- modals ----------------------------------------------------------
+
+        public void OpenCollection() => OpenModal(_collectionPanel.Root, _collectionPanel.Refresh);
+
+        /// <summary>Hand one creature the whole screen. The collection is a step on the
+        /// way here, not the destination.</summary>
+        public void OpenInspector(CreatureDefinition def)
+        {
+            if (def == null) return;
+            OpenModal(_inspectPanel.Root, () => _inspectPanel.Show(def));
+        }
 
         public void OpenModal(VisualElement panel, Action onOpen = null)
         {

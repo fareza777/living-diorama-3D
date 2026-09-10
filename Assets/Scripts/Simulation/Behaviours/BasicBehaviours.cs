@@ -89,7 +89,14 @@ namespace LivingDiorama.Simulation.Behaviours
         public override float Score(in BehaviourContext ctx)
         {
             // Danger trumps tiredness -- nothing sleeps with a wolf breathing on it.
-            if (ctx.Threat != null && ctx.ThreatDistance < ctx.Settings.baseSightRadius * 0.6f) return 0f;
+            //
+            // The radius shrinks once the creature is already down, because a wolf
+            // wandering back and forth across a fixed line woke it every time it crossed
+            // inward and let it settle every time it crossed out. Waking needs something
+            // genuinely close, not merely something in the neighbourhood.
+            bool alreadyAsleep = ctx.Self.Current is SleepBehaviour;
+            float alarm = ctx.Settings.baseSightRadius * (alreadyAsleep ? 0.3f : 0.6f);
+            if (ctx.Threat != null && ctx.ThreatDistance < alarm) return 0f;
 
             // Once asleep, stay asleep until actually rested.
             //
@@ -97,7 +104,7 @@ namespace LivingDiorama.Simulation.Behaviours
             // crossed back over the threshold it had fallen below, dozed off again a few
             // seconds later, and spent the night flickering between the two. Sleep is not
             // a thing you do for one second at a time.
-            if (ctx.Self.Current is SleepBehaviour) return ctx.Self.Energy < 0.92f ? 1f : 0f;
+            if (alreadyAsleep) return ctx.Self.Energy < 0.92f ? 1f : 0f;
 
             float tired = Mathf.Max(0f, (1f - ctx.Self.Energy) - 0.55f) * 2.2f;
             float offCycle = (1f - ctx.Activity) * 0.4f;

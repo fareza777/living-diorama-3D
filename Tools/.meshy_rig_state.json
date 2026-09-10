@@ -33,7 +33,10 @@
       }
     },
     "skeleton": {
-      "rig_id": "01a083b1-f540-76a6-a417-58184ff3af9c"
+      "rig_id": "01a088e3-0759-7655-beb8-1d083c505a12",
+      "animations": {},
+      "rig_failed": true,
+      "note": "Meshy rigs this mesh to a 24KB empty model twice over; the animation service then rejects it. Uses the procedural rig instead."
     }
   }
 }

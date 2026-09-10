@@ -243,7 +243,7 @@ namespace LivingDiorama.EditorTools
             {
                 Name = "tapping a species opens its turntable",
                 Act = () => ClickFirstCard("collection-grid-inner"),
-                Until = () => Visible("collection-detail"),
+                Until = () => Visible("modal-inspect"),
                 Capture = "05b_turntable",
             },
             new Step
