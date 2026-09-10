@@ -46,54 +46,90 @@ namespace LivingDiorama.UI
             }
         }
 
+        /// <summary>
+        /// One box, as a card rather than a row.
+        ///
+        /// The old row put the product -- the box itself -- in a 62-pixel square beside
+        /// three lines of prose, with two competing buttons crammed into a column at the
+        /// right. The odds read as a sentence that wrapped mid-fact, and the widest,
+        /// heaviest control on the screen was Close. This gives the art the top of the
+        /// card, turns the odds into a chart with a legend, shows progress against the
+        /// pity promise instead of merely stating it, and leaves exactly one primary
+        /// action.
+        /// </summary>
         VisualElement BuildEntry(MysteryBoxDefinition box)
         {
             var entry = new VisualElement();
             entry.AddToClassList("box-entry");
 
+            // ---- the box itself ------------------------------------------------
+            var top = new VisualElement();
+            top.AddToClassList("box-entry__top");
+
             var art = new VisualElement();
             art.AddToClassList("box-entry__art");
-            art.style.backgroundColor = new Color(
-                box.accentColour.r * 0.22f, box.accentColour.g * 0.22f, box.accentColour.b * 0.22f, 1f);
-            art.style.borderTopColor = box.accentColour;
-            art.style.borderRightColor = box.accentColour;
-            art.style.borderBottomColor = box.accentColour;
-            art.style.borderLeftColor = box.accentColour;
+            art.style.unityBackgroundImageTintColor = new Color(
+                0.55f + box.accentColour.r * 0.45f,
+                0.55f + box.accentColour.g * 0.45f,
+                0.55f + box.accentColour.b * 0.45f, 1f);
 
-            // A flat coloured square reads as art that has not arrived yet. The chest
-            // glyph in the box's own colour says "this is a box" at a glance.
             var glyph = new VisualElement { pickingMode = PickingMode.Ignore };
             glyph.AddToClassList("box-entry__glyph");
             UiSkin.ApplyIcon(glyph, "icon_chest");
             glyph.style.unityBackgroundImageTintColor = box.accentColour;
             art.Add(glyph);
-            entry.Add(art);
+            top.Add(art);
 
-            var text = new VisualElement { style = { flexGrow = 1 } };
-            text.Add(new Label(box.displayName) { });
-            text.Q<Label>().AddToClassList("box-entry__name");
+            // ---- name, odds chart, legend --------------------------------------
+            var text = new VisualElement();
+            text.AddToClassList("box-entry__body");
+
+            var name = new Label(box.displayName);
+            name.AddToClassList("box-entry__name");
+            text.Add(name);
 
             text.Add(OddsBar(box));
+            text.Add(OddsLegend(box));
+            top.Add(text);
+            entry.Add(top);
 
-            var odds = new Label(DescribeOdds(box));
-            odds.AddToClassList("box-entry__odds");
-            text.Add(odds);
-            entry.Add(text);
-
-            // The price column keeps its natural width; the description beside it wraps
-            // instead. Letting this one shrink cropped the price to "850 Coi...", which
-            // is the one string on the row that has to be read exactly.
-            var actions = new VisualElement { style = { alignItems = Align.FlexEnd } };
-            actions.style.flexShrink = 0;
-
-            var buy = new Button(() => OnBuy(box))
+            // ---- the pity promise, with progress against it ---------------------
+            if (box.pityRareAfter > 0)
             {
-                text = $"{box.cost:N0} {box.costCurrency}",
-            };
+                Save.SavedBox saved = _game.State.Data.BoxState(box.id);
+                int done = Mathf.Clamp(saved.sinceRare, 0, box.pityRareAfter);
+
+                var pity = new VisualElement();
+                pity.AddToClassList("pity");
+
+                var caption = new Label("Rare guaranteed");
+                caption.AddToClassList("pity__label");
+                pity.Add(caption);
+
+                var track = new VisualElement();
+                track.AddToClassList("pity__track");
+
+                var fill = new VisualElement();
+                fill.AddToClassList("pity__fill");
+                fill.style.width = Length.Percent(done / (float)box.pityRareAfter * 100f);
+                track.Add(fill);
+                pity.Add(track);
+
+                var count = new Label($"{done} / {box.pityRareAfter}");
+                count.AddToClassList("pity__count");
+                pity.Add(count);
+
+                entry.Add(pity);
+            }
+
+            // ---- one primary, one alternative ----------------------------------
+            var actions = new VisualElement();
+            actions.AddToClassList("box-entry__actions");
+
+            var buy = new Button(() => OnBuy(box)) { text = $"{box.cost:N0} {box.costCurrency}" };
             buy.AddToClassList("button");
             buy.AddToClassList("button--primary");
-            buy.style.minHeight = 46;
-            buy.style.fontSize = 15;
+            buy.AddToClassList("box-entry__buy");
             buy.SetEnabled(_game.CanAffordBox(box));
             actions.Add(buy);
 
@@ -102,13 +138,11 @@ namespace LivingDiorama.UI
                 bool ready = _game.IsFreeOpenAvailable(box);
                 var free = new Button(() => OnWatchAd(box))
                 {
-                    text = ready ? "Free (watch ad)" : $"Free in {FormatCooldown(_game.FreeOpenSecondsRemaining(box))}",
+                    text = ready ? "Watch an ad" : $"Free in {FormatCooldown(_game.FreeOpenSecondsRemaining(box))}",
                 };
                 free.AddToClassList("button");
                 free.AddToClassList("button--ad");
-                free.style.minHeight = 42;
-                free.style.fontSize = 14;
-                free.style.marginTop = 6;
+                free.AddToClassList("box-entry__free");
                 free.SetEnabled(ready);
                 actions.Add(free);
             }
@@ -116,6 +150,47 @@ namespace LivingDiorama.UI
             entry.Add(actions);
             return entry;
         }
+
+        /// <summary>
+        /// The figures, tied to the bar above them by colour.
+        ///
+        /// A dot the same colour as its segment is what turns the bar from decoration
+        /// into a chart. Tiers the box cannot give stay listed and dimmed: knowing a
+        /// Legendary exists and that this box will never produce one is information the
+        /// player is entitled to.
+        /// </summary>
+        static VisualElement OddsLegend(MysteryBoxDefinition box)
+        {
+            var legend = new VisualElement();
+            legend.AddToClassList("legend");
+
+            foreach (Rarity rarity in Tiers)
+            {
+                float share = box.ChanceOf(rarity);
+
+                var row = new VisualElement();
+                row.AddToClassList("legend__item");
+                if (share <= 0.0001f) row.AddToClassList("legend__item--none");
+
+                var dot = new VisualElement();
+                dot.AddToClassList("legend__dot");
+                dot.style.backgroundColor = RarityColour(rarity);
+                row.Add(dot);
+
+                var label = new Label($"{rarity} {share * 100f:0.#}%");
+                label.AddToClassList("legend__label");
+                row.Add(label);
+
+                legend.Add(row);
+            }
+
+            return legend;
+        }
+
+        static readonly Rarity[] Tiers =
+        {
+            Rarity.Common, Rarity.Uncommon, Rarity.Rare, Rarity.Epic, Rarity.Legendary,
+        };
 
         static string FormatCooldown(int seconds)
         {
@@ -137,10 +212,7 @@ namespace LivingDiorama.UI
             var bar = new VisualElement();
             bar.AddToClassList("odds");
 
-            foreach (Rarity rarity in new[]
-                     {
-                         Rarity.Common, Rarity.Uncommon, Rarity.Rare, Rarity.Epic, Rarity.Legendary,
-                     })
+            foreach (Rarity rarity in Tiers)
             {
                 float share = box.ChanceOf(rarity);
                 if (share <= 0.0001f) continue;
@@ -153,25 +225,6 @@ namespace LivingDiorama.UI
             }
 
             return bar;
-        }
-
-        string DescribeOdds(MysteryBoxDefinition box)
-        {
-            string odds =
-                $"Rare {box.ChanceOf(Rarity.Rare) * 100f:0.#}%  |  " +
-                $"Epic {box.ChanceOf(Rarity.Epic) * 100f:0.#}%  |  " +
-                $"Legendary {box.ChanceOf(Rarity.Legendary) * 100f:0.##}%";
-
-            if (box.pityRareAfter > 0)
-            {
-                Save.SavedBox saved = _game.State.Data.BoxState(box.id);
-                int left = Mathf.Max(0, box.pityRareAfter - saved.sinceRare);
-                odds += left <= 1
-                    ? "\nA Rare is guaranteed in the next box."
-                    : $"\nA Rare is guaranteed within {left} boxes.";
-            }
-
-            return odds;
         }
 
         // ---- actions --------------------------------------------------------

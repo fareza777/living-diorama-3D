@@ -56,6 +56,11 @@ namespace LivingDiorama.EditorTools
         static string _pendingCapture;
         static int _pendingFrames;
 
+        /// <summary>Longer than the slowest entrance in LivingDiorama.uss, plus the
+        /// staggered tail of a full grid.</summary>
+        const double SettleSeconds = 0.85;
+        static double _settleUntil = -1;
+
         // ---- entry ----------------------------------------------------------
 
         public static void Run()
@@ -588,6 +593,17 @@ namespace LivingDiorama.EditorTools
             {
                 if (step.Capture != null)
                 {
+                    // Let the interface finish arriving first.
+                    //
+                    // Panels and cards now animate in, and a step's condition is met the
+                    // instant the elements exist -- which is a frame or two before they
+                    // are visible. Photographing there caught a collection grid with two
+                    // of its six cards drawn and the rest still at zero opacity, and it
+                    // read as four missing cards rather than as a screenshot taken early.
+                    if (_settleUntil < 0) _settleUntil = now + SettleSeconds;
+                    if (now < _settleUntil) return;
+
+                    _settleUntil = -1;
                     RequestCapture(step.Capture);
                     step.Capture = null;
                     return;

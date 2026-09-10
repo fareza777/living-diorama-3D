@@ -66,6 +66,22 @@ namespace LivingDiorama.Core
         public bool CanAffordBox(MysteryBoxDefinition box) =>
             box != null && _state.CanAfford(box.costCurrency, box.cost);
 
+        /// <summary>Whether any box on the roster can be opened right now, for free or
+        /// paid. The tray's primary uses it to decide whether it is worth inviting a
+        /// press.</summary>
+        public bool CanOpenAnyBox()
+        {
+            if (_db == null || _db.boxes == null) return false;
+
+            foreach (MysteryBoxDefinition box in _db.boxes)
+            {
+                if (box == null) continue;
+                if (CanAffordBox(box) || IsFreeOpenAvailable(box)) return true;
+            }
+
+            return false;
+        }
+
         public bool IsFreeOpenAvailable(MysteryBoxDefinition box)
         {
             if (box == null || !box.rewardedAdEligible) return false;

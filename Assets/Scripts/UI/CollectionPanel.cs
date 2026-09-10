@@ -46,6 +46,9 @@ namespace LivingDiorama.UI
             {
                 if (def != null) _grid.Add(BuildCard(def));
             }
+
+            // Dealt out rather than flashed on all at once.
+            UiMotion.Stagger(_grid);
         }
 
         VisualElement BuildCard(CreatureDefinition def)

@@ -34,6 +34,7 @@ namespace LivingDiorama.UI
 
         // HUD
         Label _coinsValue, _essenceValue, _keysValue;
+        Button _boxButton;
         Label _levelLabel, _levelXp, _clockLabel, _rateLabel, _populationLabel;
         VisualElement _levelFill, _hud;
         Button _turntableButton;
@@ -145,7 +146,8 @@ namespace LivingDiorama.UI
 
         void WireButtons()
         {
-            _root.Q<Button>("btn-box").clicked += () => { Click(); OpenModal(_boxPanel.Root, _boxPanel.Refresh); };
+            _boxButton = _root.Q<Button>("btn-box");
+            _boxButton.clicked += () => { Click(); OpenModal(_boxPanel.Root, _boxPanel.Refresh); };
             _root.Q<Button>("btn-collection").clicked += () => { Click(); OpenCollection(); };
             _root.Q<Button>("btn-expand").clicked += () => { Click(); OpenModal(_expandPanel.Root, _expandPanel.Refresh); };
 
@@ -402,11 +404,24 @@ namespace LivingDiorama.UI
             _audio.Narrate(key, SettingsPanel.SubtitlesEnabled ? TitleScreen.SubtitleFor(key) : null);
         }
 
+        /// <summary>Breathe the tray's primary while a box is affordable, and stop the
+        /// moment it is not. Nothing else in the interface loops: a control that moves
+        /// forever stops meaning "press me".</summary>
+        void RefreshTrayInvitation()
+        {
+            if (_boxButton == null) return;
+            UiMotion.Breathe(_boxButton, _game.CanOpenAnyBox());
+        }
+
         void RefreshWallet()
         {
-            _coinsValue.text = _game.State.Data.coins.ToString("N0");
-            _essenceValue.text = _game.State.Data.essence.ToString("N0");
-            _keysValue.text = _game.State.Data.boxKeys.ToString("N0");
+            // Counted up rather than swapped. Earning the coins is the reward; a label
+            // that simply changes hides it.
+            UiMotion.CountTo(_coinsValue, _game.State.Data.coins);
+            UiMotion.CountTo(_essenceValue, _game.State.Data.essence);
+            UiMotion.CountTo(_keysValue, _game.State.Data.boxKeys);
+
+            RefreshTrayInvitation();
         }
 
         void OnLevelChanged()
@@ -462,6 +477,12 @@ namespace LivingDiorama.UI
             _openModals.Add(panel);
 
             _modalLayer.RemoveFromClassList("hidden");
+
+            // The card rises into place and the world dims behind it. Both animate
+            // toward the state the stylesheet already describes, so a modal whose
+            // entrance never runs still opens -- it just opens without moving.
+            UiMotion.Enter(_modalLayer, 0f, 1f);
+            UiMotion.Enter(panel, 16f);
 
             // The tray is docked at the bottom of the screen, below where a modal card
             // ends, so it kept sitting there at full brightness beside a dimmed world and

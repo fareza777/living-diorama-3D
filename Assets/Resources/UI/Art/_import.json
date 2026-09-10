@@ -1,0 +1,20 @@
+{
+  "sprites": [
+    { "key": "ld_plate", "border": [38,38,38,38], "maxSize": 192 },
+    { "key": "ld_plate_raised", "border": [38,38,38,38], "maxSize": 192 },
+    { "key": "ld_plate_sunken", "border": [34,34,34,34], "maxSize": 192 },
+    { "key": "ld_modal", "border": [60,60,60,60], "maxSize": 320 },
+    { "key": "ld_chip", "border": [32,32,32,32], "maxSize": 160 },
+    { "key": "ld_button_brass", "border": [42,42,42,42], "maxSize": 288 },
+    { "key": "ld_button_brass_down", "border": [42,42,42,42], "maxSize": 288 },
+    { "key": "ld_button_glass", "border": [42,42,42,42], "maxSize": 288 },
+    { "key": "ld_bar_track", "border": [20,20,20,20], "maxSize": 96 },
+    { "key": "ld_bar_fill", "border": [20,20,20,20], "maxSize": 96 },
+    { "key": "ld_frame_common", "border": [34,34,34,34], "maxSize": 192 },
+    { "key": "ld_frame_uncommon", "border": [34,34,34,34], "maxSize": 192 },
+    { "key": "ld_frame_rare", "border": [34,34,34,34], "maxSize": 192 },
+    { "key": "ld_frame_epic", "border": [34,34,34,34], "maxSize": 192 },
+    { "key": "ld_frame_legendary", "border": [34,34,34,34], "maxSize": 192 },
+    { "key": "ld_ring", "border": null, "maxSize": 112 }
+  ]
+}

@@ -58,7 +58,7 @@
         <ui:VisualElement class="spacer" picking-mode="Ignore" />
 
         <ui:VisualElement class="hud__bottom" picking-mode="Ignore">
-            <ui:Button name="btn-box" class="button button--primary tray__button" text="Mystery Box" />
+            <ui:Button name="btn-box" class="button button--primary tray__button tray__button--primary" text="Mystery Box" />
             <ui:Button name="btn-collection" class="button button--ghost tray__button" text="Collection" />
             <ui:Button name="btn-expand" class="button button--ghost tray__button" text="Expand" />
         </ui:VisualElement>
@@ -96,12 +96,11 @@
             <ui:Label class="modal__subtitle"
                       text="Every box holds one creature. Rarer boxes hold rarer company." />
 
-            <ui:ScrollView name="box-list" class="box-list" style="max-height: 360px;" />
+            <ui:ScrollView name="box-list" class="box-list" style="max-height: 560px;" />
 
             <ui:Label name="box-message" class="modal__subtitle hidden" text="" />
 
-            <ui:Button name="btn-box-close" class="button button--ghost" text="Close"
-                       style="margin-top: 12px;" />
+            <ui:Button name="btn-box-close" class="button modal__close" text="✕" tooltip="Close" />
         </ui:VisualElement>
 
         <!-- ==================================================== collection -->
@@ -116,8 +115,7 @@
             <ui:Label name="collection-hint" class="modal__subtitle" text="Tap a creature to look at it up close."
                       style="margin-top: 10px;" />
 
-            <ui:Button name="btn-collection-close" class="button button--ghost" text="Close"
-                       style="margin-top: 12px;" />
+            <ui:Button name="btn-collection-close" class="button modal__close" text="✕" tooltip="Close" />
         </ui:VisualElement>
 
         <!-- ======================================================= inspect -->
@@ -148,8 +146,7 @@
 
             <ui:ScrollView name="chronicle-list" style="max-height: 560px;" />
 
-            <ui:Button name="btn-chronicle-close" class="button button--ghost" text="Close"
-                       style="margin-top: 12px;" />
+            <ui:Button name="btn-chronicle-close" class="button modal__close" text="✕" tooltip="Close" />
         </ui:VisualElement>
 
         <!-- ======================================================== expand -->
@@ -160,8 +157,7 @@
 
             <ui:ScrollView name="expand-list" style="max-height: 540px; margin-bottom: 6px;" />
 
-            <ui:Button name="btn-expand-close" class="button button--ghost" text="Close"
-                       style="margin-top: 12px;" />
+            <ui:Button name="btn-expand-close" class="button modal__close" text="✕" tooltip="Close" />
         </ui:VisualElement>
 
         <!-- ================================================= welcome back -->
